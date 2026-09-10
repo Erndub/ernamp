@@ -6,7 +6,7 @@
 
 window.MODES = [
   // Utility / media
-  'INFO-HUD', 'VIDEO_MODE', 'VIS_OFF', 'GAMES', 'PIC', 'AI-VIDEO', 'DEBUG-HUD',
+  'INFO-HUD', 'VIDEO_MODE', 'VIS_OFF', 'GAMES', 'PIC', 'AI-VIDEO', 'DEBUG-HUD', 'UTILITIES',
 
   // Classics
   'GLISTEN', 'RUMPLE', 'POLAR', 'VU-METER', 'SINGULARITY', 'LED-BAR',
@@ -2517,6 +2517,31 @@ VisRegistry['GAMES'] = function(ctx, w, h, fData, app, accent) {
   ctx.fillText('SELECT A GAME · GAMEPAD SUPPORTED', w / 2, h / 2 + 12);
   ctx.globalAlpha = 1;
   ctx.textAlign = 'left';
+};
+
+// UTILITIES — in-CRT tabbed layer (open-dir search, Drive, links, blanks)
+// Requires utilities.js (window.UtilitiesMode). Mode sync is also handled in setMode.
+VisRegistry['UTILITIES'] = function(ctx, w, h, fData, app, accent, textColor, panelColor) {
+  // Soft spectrum under the utilities HTML layer
+  const bars = 48, bw = w / bars;
+  for (let i = 0; i < bars; i++) {
+    const v = (fData[Math.floor(i * fData.length / bars)] || 0) / 255;
+    ctx.fillStyle = VisHelpers.hue(260 + i * 2, 60, 35, 0.18);
+    ctx.fillRect(i * bw, h - v * h * 0.25, bw - 1, v * h * 0.25);
+  }
+
+  if (typeof window.UtilitiesMode !== 'undefined' && window.UtilitiesMode.open) {
+    window.UtilitiesMode.open();
+  } else {
+    ctx.fillStyle = accent || '#7c5cff';
+    ctx.font = '13px "Share Tech Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('UTILITIES MODE', w / 2, h / 2 - 8);
+    ctx.fillStyle = '#f66';
+    ctx.font = '11px monospace';
+    ctx.fillText('utilities.js not loaded', w / 2, h / 2 + 14);
+    ctx.textAlign = 'left';
+  }
 };
 
 

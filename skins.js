@@ -217,7 +217,317 @@ const SKINS = {
     surface: "radial-gradient(ellipse at center, rgba(255,255,255,0.05) 0%, transparent 70%)",
     size: "100px",
     led: { shape: "2px", glow: "0 0 15px #FF2200", count: 12 }
-}   
+},
+
+/* ═══════════════════════════════════════════════════════════
+   FUNKY / REFRESHING SKINS  –  Stripey · Gradients · Dotty · Animated
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Stripey ─────────────────────────────────────────────── */
+
+"Candy Stripes": {
+    bg: "repeating-linear-gradient(45deg, #ff2d6a 0px, #ff2d6a 12px, #ff9f43 12px, #ff9f43 24px, #feca57 24px, #feca57 36px, #48dbfb 36px, #48dbfb 48px)",
+    panel: "#2a1020",
+    sidebar: "rgba(0,0,0,0.25)",
+    footer: "rgba(0,0,0,0.35)",
+    border: "#ff6b9d",
+    text: "#ffe0ec",
+    textDim: "#c080a0",
+    accent: "#ff2d6a",
+    ledOff: "#3a1830",
+    crtBg: "#12080e",
+    knob: "conic-gradient(#ff2d6a, #ff9f43, #feca57, #48dbfb, #ff2d6a)",
+    surface: "none",
+    size: "0px",
+    led: { shape: "50%", glow: "0 0 10px #ff2d6a", count: 8 }
+},
+
+"Zebra Pop": {
+    bg: "repeating-linear-gradient(90deg, #0d0d0d 0px, #0d0d0d 14px, #f5f5f5 14px, #f5f5f5 28px)",
+    panel: "#1a1a1a",
+    sidebar: "rgba(0,0,0,0.4)",
+    footer: "rgba(0,0,0,0.5)",
+    border: "#ffffff",
+    text: "#f5f5f5",
+    textDim: "#999999",
+    accent: "#ffee00",
+    ledOff: "#222",
+    crtBg: "#050505",
+    knob: "conic-gradient(#ffee00, #0d0d0d, #ffee00)",
+    surface: "none",
+    size: "0px",
+    led: { shape: "2px", glow: "0 0 8px #ffee00", count: 10 }
+},
+
+"Retro Scanlines": {
+    bg: "#001a00",
+    panel: "#002200",
+    sidebar: "rgba(0,0,0,0.3)",
+    footer: "rgba(0,30,0,0.5)",
+    border: "#00ff66",
+    text: "#b8ffb8",
+    textDim: "#4a9a4a",
+    accent: "#00ff66",
+    ledOff: "#003300",
+    crtBg: "#000f00",
+    knob: "conic-gradient(#00ff66, #001a00, #00ff66)",
+    surface: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,100,0.07) 2px, rgba(0,255,100,0.07) 4px)",
+    size: "100% 4px",
+    led: { shape: "2px", glow: "0 0 12px #00ff66, 0 0 4px #ffffff", count: 16 }
+},
+
+"Barber Pole": {
+    bg: "repeating-linear-gradient(-45deg, #e63946 0px, #e63946 10px, #f1faee 10px, #f1faee 20px, #1d3557 20px, #1d3557 30px)",
+    panel: "#1d3557",
+    sidebar: "rgba(0,0,0,0.3)",
+    footer: "rgba(0,0,0,0.4)",
+    border: "#e63946",
+    text: "#f1faee",
+    textDim: "#a8dadc",
+    accent: "#e63946",
+    ledOff: "#0d1b2a",
+    crtBg: "#0a1628",
+    knob: "conic-gradient(#e63946, #f1faee, #1d3557, #e63946)",
+    surface: "none",
+    size: "0px",
+    led: { shape: "50%", glow: "0 0 10px #e63946", count: 8 }
+},
+
+/* ── Gradients ───────────────────────────────────────────── */
+
+"Sunset Bloom": {
+    bg: "linear-gradient(160deg, #1a0a2e 0%, #2d1b4e 40%, #4a1942 100%)",
+    panel: "#2a1538",
+    sidebar: "rgba(20,5,30,0.4)",
+    footer: "rgba(10,0,20,0.6)",
+    border: "#ff6b35",
+    text: "#ffe8d6",
+    textDim: "#c09080",
+    accent: "#ff6b35",
+    ledOff: "#3d1f4f",
+    crtBg: "#12081c",
+    knob: "conic-gradient(#ff6b35, #2a1538, #ffd166, #2a1538)",
+    surface: "none",
+    size: "0px",
+    led: { shape: "50%", glow: "0 0 12px #ff6b35", count: 8 }
+},
+
+"Aurora Borealis": {
+    bg: "linear-gradient(135deg, #0a1628 0%, #0d2b45 35%, #1a3a4a 70%, #0f2a3a 100%)",
+    panel: "#0f2438",
+    sidebar: "rgba(5,15,25,0.45)",
+    footer: "rgba(0,20,30,0.6)",
+    border: "#4ecdc4",
+    text: "#e0f7f5",
+    textDim: "#6a9a98",
+    accent: "#4ecdc4",
+    ledOff: "#163048",
+    crtBg: "#061018",
+    knob: "conic-gradient(#4ecdc4, #0f2438, #95e1a3, #0f2438)",
+    surface: "none",
+    size: "0px",
+    led: { shape: "2px", glow: "0 0 14px #4ecdc4", count: 12 }
+},
+
+"Molten Core": {
+    bg: "linear-gradient(180deg, #1a0500 0%, #3d0c00 40%, #7a1a00 100%)",
+    panel: "#2a0c00",
+    sidebar: "rgba(30,5,0,0.4)",
+    footer: "rgba(20,0,0,0.55)",
+    border: "#ff4500",
+    text: "#ffdcc0",
+    textDim: "#c08060",
+    accent: "#ff4500",
+    ledOff: "#3d1400",
+    crtBg: "#100300",
+    knob: "conic-gradient(#ff4500, #2a0c00, #ffaa00, #2a0c00)",
+    surface: "none",
+    size: "0px",
+    led: { shape: "50%", glow: "0 0 16px #ff4500, 0 0 4px #ffaa00", count: 10 }
+},
+
+"Pastel Dream": {
+    bg: "linear-gradient(135deg, #ff9a9e 0%, #fad0c4 50%, #fad0c4 100%)",
+    panel: "#ffe0e8",
+    sidebar: "rgba(255,255,255,0.35)",
+    footer: "rgba(255,200,210,0.5)",
+    border: "#ff6b9d",
+    text: "#5a3040",
+    textDim: "#a07080",
+    accent: "#ff6b9d",
+    ledOff: "#f0c0d0",
+    crtBg: "#2a1520",
+    knob: "conic-gradient(#ff9a9e, #fad0c4, #ff9a9e)",
+    surface: "none",
+    size: "0px",
+    led: { shape: "50%", glow: "0 0 8px #ff6b9d", count: 6 }
+},
+
+/* ── Dotty / Patterned ───────────────────────────────────── */
+
+"Polka Night": {
+    bg: "#12081c",
+    panel: "#1e1030",
+    sidebar: "rgba(10,5,20,0.4)",
+    footer: "rgba(5,0,15,0.55)",
+    border: "#c77dff",
+    text: "#f0e6ff",
+    textDim: "#9a80b8",
+    accent: "#c77dff",
+    ledOff: "#2a1840",
+    crtBg: "#0a0514",
+    knob: "conic-gradient(#c77dff, #1e1030, #c77dff)",
+    surface: "radial-gradient(#c77dff 1.2px, transparent 1.2px)",
+    size: "14px 14px",
+    led: { shape: "50%", glow: "0 0 12px #c77dff", count: 8 }
+},
+
+"Confetti Pop": {
+    bg: "#0f0f1a",
+    panel: "#1a1a2e",
+    sidebar: "rgba(0,0,0,0.35)",
+    footer: "rgba(0,0,0,0.5)",
+    border: "#ffd60a",
+    text: "#fff8e0",
+    textDim: "#a0a080",
+    accent: "#ffd60a",
+    ledOff: "#252545",
+    crtBg: "#080810",
+    knob: "conic-gradient(#ffd60a, #ff006e, #8338ec, #3a86ff, #ffd60a)",
+    surface: "radial-gradient(#ff006e 1px, transparent 1px), radial-gradient(#8338ec 1px, transparent 1px), radial-gradient(#3a86ff 1px, transparent 1px), radial-gradient(#ffbe0b 1px, transparent 1px)",
+    size: "18px 18px",
+    led: { shape: "50%", glow: "0 0 10px #ffd60a", count: 10 }
+},
+
+"Grid Punk": {
+    bg: "#0a0a0a",
+    panel: "#141414",
+    sidebar: "rgba(0,0,0,0.4)",
+    footer: "rgba(0,0,0,0.55)",
+    border: "#00ff9f",
+    text: "#e0ffe8",
+    textDim: "#60a080",
+    accent: "#00ff9f",
+    ledOff: "#1e1e1e",
+    crtBg: "#050505",
+    knob: "conic-gradient(#00ff9f, #0a0a0a, #00e5ff, #0a0a0a)",
+    surface: "linear-gradient(rgba(0,255,159,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,159,0.12) 1px, transparent 1px)",
+    size: "16px 16px",
+    led: { shape: "2px", glow: "0 0 12px #00ff9f", count: 14 }
+},
+
+"Honeycomb": {
+    bg: "#1a1208",
+    panel: "#2a1e10",
+    sidebar: "rgba(20,10,0,0.35)",
+    footer: "rgba(10,5,0,0.5)",
+    border: "#f0a500",
+    text: "#ffe8c0",
+    textDim: "#a08040",
+    accent: "#f0a500",
+    ledOff: "#3a2a18",
+    crtBg: "#0e0a04",
+    knob: "conic-gradient(#f0a500, #2a1e10, #f0a500)",
+    surface: "radial-gradient(circle, transparent 40%, #f0a50033 40%, #f0a50033 55%, transparent 55%)",
+    size: "20px 20px",
+    led: { shape: "50%", glow: "0 0 10px #f0a500", count: 8 }
+},
+
+/* ── Animated (CSS className driven) ─────────────────────── */
+/* These rely on matching CSS keyframes in your stylesheet.
+   className values: anim-pulse-glow, anim-rainbow-border,
+   anim-wave-bg, anim-glitter, anim-matrix-rain              */
+
+"Pulse Neon": {
+    bg: "#0a0014",
+    panel: "#12001f",
+    sidebar: "rgba(15,0,30,0.4)",
+    footer: "rgba(10,0,20,0.55)",
+    border: "#ff00aa",
+    text: "#f0e6ff",
+    textDim: "#a080c0",
+    accent: "#ff00aa",
+    ledOff: "#1a002c",
+    crtBg: "#080010",
+    knob: "conic-gradient(#ff00aa, #12001f, #00ff9d, #12001f)",
+    surface: "none",
+    size: "0px",
+    className: "anim-pulse-glow",
+    led: { shape: "50%", glow: "0 0 18px #ff00aa, 0 0 6px #ffffff", count: 10 }
+},
+
+"Rainbow Flow": {
+    bg: "#0d0d12",
+    panel: "#1a1a22",
+    sidebar: "rgba(0,0,0,0.35)",
+    footer: "rgba(0,0,0,0.5)",
+    border: "#ff6b6b",
+    text: "#f0f0f8",
+    textDim: "#9090a8",
+    accent: "#ff6b6b",
+    ledOff: "#262630",
+    crtBg: "#08080c",
+    knob: "conic-gradient(#ff6b6b, #feca57, #48dbfb, #ff9ff3, #ff6b6b)",
+    surface: "none",
+    size: "0px",
+    className: "anim-rainbow-border",
+    led: { shape: "50%", glow: "0 0 12px #ff6b6b", count: 8 }
+},
+
+"Wave Drift": {
+    bg: "#061820",
+    panel: "#0c2830",
+    sidebar: "rgba(0,20,30,0.4)",
+    footer: "rgba(0,15,25,0.55)",
+    border: "#00d4ff",
+    text: "#e0f8ff",
+    textDim: "#60a0b0",
+    accent: "#00d4ff",
+    ledOff: "#143840",
+    crtBg: "#030c10",
+    knob: "conic-gradient(#00d4ff, #0c2830, #00ffaa, #0c2830)",
+    surface: "none",
+    size: "0px",
+    className: "anim-wave-bg",
+    led: { shape: "2px", glow: "0 0 14px #00d4ff", count: 12 }
+},
+
+"Glitter Bomb": {
+    bg: "#12081c",
+    panel: "#1e1030",
+    sidebar: "rgba(15,5,25,0.4)",
+    footer: "rgba(10,0,20,0.55)",
+    border: "#ffd700",
+    text: "#fff8e0",
+    textDim: "#b0a070",
+    accent: "#ffd700",
+    ledOff: "#2a1840",
+    crtBg: "#0a0514",
+    knob: "conic-gradient(#ffd700, #1e1030, #ffd700)",
+    surface: "none",
+    size: "0px",
+    className: "anim-glitter",
+    led: { shape: "50%", glow: "0 0 14px #ffd700, 0 0 4px #fff", count: 10 }
+},
+
+"Matrix Rain": {
+    bg: "#000a00",
+    panel: "#001400",
+    sidebar: "rgba(0,15,0,0.4)",
+    footer: "rgba(0,10,0,0.55)",
+    border: "#00ff41",
+    text: "#b0ffb0",
+    textDim: "#3a8a3a",
+    accent: "#00ff41",
+    ledOff: "#001e00",
+    crtBg: "#000500",
+    knob: "conic-gradient(#00ff41, #001400, #00ff41)",
+    surface: "none",
+    size: "0px",
+    className: "anim-matrix-rain",
+    led: { shape: "2px", glow: "0 0 12px #00ff41, 0 0 3px #fff", count: 16 }
+}
+
 }; 
 
 // Expose to module scripts (top-level const isn't a window property)

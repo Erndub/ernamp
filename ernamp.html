@@ -11,6 +11,7 @@
 <script src="stations.js"></script>
 <script src="visualizers.js"></script>
 <script src="games.js"></script>
+<script src="utilities.js"></script>
 <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
 
 <style>
@@ -180,8 +181,138 @@ body.compact .chassis {
     border-bottom: 2px solid var(--crt-border); 
 }
     #vis-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; z-index: 2; }
-    .drawer { position: absolute; bottom: 0; left: 0; width: 100%; height: 0; background: var(--drawer-bg); border-top: 1px solid var(--skin-border); transition: 0.25s; overflow-y: auto; z-index: 10; opacity: 0.98; }
+    .drawer { position: absolute; bottom: 0; left: 0; width: 100%; height: 0; background: var(--drawer-bg); border-top: 1px solid var(--skin-border); transition: 0.25s height 0.25s, padding-bottom 0.35s ease; overflow-y: auto; z-index: 10; opacity: 0.98; }
     .drawer.open { height: 65%; }
+    /* Sticky playlist chrome so ADD / CLEAR stay visible while list scrolls */
+    #drawer-header {
+        position: sticky;
+        top: 0;
+        z-index: 12;
+        background: var(--drawer-bg);
+        border-bottom: 1px solid var(--skin-border);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    /* When seek/transport rises over the drawer, lift list so last rows stay clickable */
+    .stage:not(.is-fullscreen):hover .drawer.open {
+        padding-bottom: 72px;
+    }
+    .stage.is-fullscreen.fs-chrome-visible .drawer.open {
+        padding-bottom: 72px;
+    }
+    /* My Files CRT header — one tight row, same language as sidebar .lm-btn */
+    .myfiles-row {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 5px 8px 4px;
+        flex-wrap: nowrap;
+        min-width: 0;
+    }
+    .myfiles-title {
+        flex: 0 0 auto;
+        font-size: 8px;
+        font-weight: 900;
+        letter-spacing: 0.6px;
+        color: var(--skin-text);
+        white-space: nowrap;
+        margin-right: 2px;
+    }
+    .myfiles-row .lm-btn {
+        flex: 0 0 auto;
+        background: var(--skin-bg);
+        border: 1px solid var(--skin-border);
+        color: var(--skin-text);
+        font-family: "Share Tech Mono", "VT323", ui-monospace, monospace;
+        font-size: 7px;
+        font-weight: 700;
+        letter-spacing: 0.7px;
+        line-height: 1;
+        padding: 3px 5px;
+        border-radius: 2px;
+        cursor: pointer;
+        text-transform: uppercase;
+        opacity: 0.85;
+        width: auto;
+        margin: 0;
+        white-space: nowrap;
+    }
+    .myfiles-row .lm-btn:hover {
+        border-color: var(--skin-accent);
+        color: var(--skin-accent);
+        opacity: 1;
+    }
+    .myfiles-row input[type="text"] {
+        flex: 1 1 auto;
+        min-width: 60px;
+        background: var(--search-bg);
+        border: 1px solid var(--skin-border);
+        color: var(--search-text);
+        font-family: "Share Tech Mono", "VT323", ui-monospace, monospace;
+        font-size: 7px;
+        padding: 2px 5px;
+        line-height: 1.2;
+        text-transform: none;
+        border-radius: 2px;
+    }
+    .myfiles-hint {
+        font-size: 6.5px;
+        color: var(--skin-text-dim);
+        padding: 0 8px 5px;
+        line-height: 1.3;
+        letter-spacing: 0.2px;
+    }
+    /* Sidebar LOCAL mini browser — discreet */
+    .local-mini {
+        margin: 4px 0 8px;
+        padding: 6px 6px 7px;
+        border: 1px solid var(--skin-border);
+        border-radius: 3px;
+        background: rgba(0,0,0,0.04);
+    }
+    .local-mini .lm-row {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        margin-top: 4px;
+    }
+    .local-mini input[type="text"] {
+        flex: 1;
+        min-width: 0;
+        background: var(--search-bg);
+        border: 1px solid var(--skin-border);
+        color: var(--search-text);
+        font: 8px inherit;
+        padding: 4px 5px;
+        text-transform: none;
+    }
+    .local-mini .lm-btn {
+        flex: 0 0 auto;
+        background: var(--skin-bg);
+        border: 1px solid var(--skin-border);
+        color: var(--skin-text);
+        font-family: "Share Tech Mono", "VT323", ui-monospace, monospace;
+        font-size: 7px;
+        font-weight: 700;
+        letter-spacing: 0.7px;
+        line-height: 1;
+        padding: 3px 5px;
+        border-radius: 2px;
+        cursor: pointer;
+        text-transform: uppercase;
+        opacity: 0.85;
+    }
+    .local-mini .lm-btn:hover {
+        border-color: var(--skin-accent);
+        color: var(--skin-accent);
+        opacity: 1;
+    }
+    .local-mini .lm-meta {
+        font-size: 6.5px;
+        color: var(--skin-text-dim);
+        margin-top: 4px;
+        letter-spacing: 0.3px;
+        line-height: 1.3;
+    }
     /* Mode LCD readout — fixed width, TFL-style dot matrix, marquee if overflow */
     .mode-lcd {
         margin-top: 6px;
@@ -710,20 +841,119 @@ body.compact .chassis {
     body.forge-mode .seek-wrapper { display: none; }
     body.forge-mode .seek-bar,
     body.forge-mode .t-btn { pointer-events: none; }
-	#forge-toggle-btn {
-    position: relative;
-    
-    left: 0px;  /* Moves it right */
+
+    #forge-toggle-btn {
+        position: relative;
+        left: 0px;  /* Moves it right */
+    }
+
+/* ═══════════════════════════════════════════════════════════
+   ERNDUB – Animated Skin Keyframes (funky pack)
+   Applied via skin.className: anim-pulse-glow, anim-rainbow-border,
+   anim-wave-bg, anim-glitter, anim-matrix-rain
+   ═══════════════════════════════════════════════════════════ */
+.anim-pulse-glow {
+  animation: pulse-glow 2.4s ease-in-out infinite;
+}
+@keyframes pulse-glow {
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.15) drop-shadow(0 0 14px var(--skin-accent)); }
+}
+
+.anim-rainbow-border {
+  animation: rainbow-border 6s linear infinite;
+}
+@keyframes rainbow-border {
+  0%   { --skin-border: #ff6b6b; }
+  20%  { --skin-border: #feca57; }
+  40%  { --skin-border: #48dbfb; }
+  60%  { --skin-border: #ff9ff3; }
+  80%  { --skin-border: #1dd1a1; }
+  100% { --skin-border: #ff6b6b; }
+}
+
+/* Wave Drift – force a tall gradient so position shift is visible even on solid skins */
+.anim-wave-bg .chassis {
+  background-image: linear-gradient(
+    180deg,
+    var(--skin-bg) 0%,
+    color-mix(in srgb, var(--skin-accent) 22%, var(--skin-bg)) 40%,
+    var(--skin-bg) 70%,
+    color-mix(in srgb, var(--skin-accent) 14%, var(--skin-bg)) 100%
+  ) !important;
+  background-size: 100% 220% !important;
+  background-position: 0% 0%;
+  animation: wave-bg 8s ease-in-out infinite;
+}
+@keyframes wave-bg {
+  0%, 100% { background-position: 0% 0%; }
+  50%      { background-position: 0% 100%; }
+}
+
+.anim-glitter {
+  position: relative;
+}
+.anim-glitter .chassis::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  background-image:
+    radial-gradient(1.5px 1.5px at 10% 20%, #fff 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 30% 70%, #ffd700 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 60% 30%, #fff 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 80% 80%, #ffd700 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 50% 50%, #fff 50%, transparent 50%);
+  background-size: 120px 120px;
+  opacity: 0.55;
+  animation: glitter 1.8s steps(4) infinite;
+}
+@keyframes glitter {
+  0%   { background-position: 0 0, 20px 30px, 40px 10px, 60px 50px, 80px 20px; opacity: 0.4; }
+  25%  { background-position: 10px 15px, 30px 45px, 50px 25px, 70px 65px, 90px 35px; opacity: 0.7; }
+  50%  { background-position: 20px 30px, 40px 60px, 60px 40px, 80px 80px, 100px 50px; opacity: 0.45; }
+  75%  { background-position: 5px 10px, 25px 40px, 45px 20px, 65px 55px, 85px 30px; opacity: 0.8; }
+  100% { background-position: 0 0, 20px 30px, 40px 10px, 60px 50px, 80px 20px; opacity: 0.4; }
+}
+
+/* Matrix Rain – scanlines on a dedicated overlay so they always animate visibly */
+.anim-matrix-rain .chassis {
+  position: relative;
+}
+.anim-matrix-rain .chassis::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 255, 65, 0.12) 2px,
+    rgba(0, 255, 65, 0.12) 4px
+  );
+  background-size: 100% 40px;
+  animation: matrix-rain 2.5s linear infinite;
+  mix-blend-mode: screen;
+}
+@keyframes matrix-rain {
+  0%   { background-position: 0 0; }
+  100% { background-position: 0 40px; }
+}
+
 </style>
 </head>
 <body>
 
-<input type="file" id="file-input" multiple accept="audio/*,video/*" style="display:none;" onchange="app.handleFiles(this.files)">
-<input type="file" id="playlist-input" accept=".js,.m3u,.m3u8,audio/x-mpegurl,application/vnd.apple.mpegurl" style="display:none;" onchange="app.loadPlaylistFile(this.files[0])">
+<input type="file" id="file-input" multiple accept="audio/*,video/*,.mp3,.m4a,.aac,.ogg,.opus,.flac,.wav,.webm,.mp4,.m4v,.mkv,.mov,.avi,.m3u,.m3u8" style="display:none;" onchange="app.handleFiles(this.files)">
+<input type="file" id="folder-input" webkitdirectory directory multiple style="display:none;" onchange="app.handleFiles(this.files)">
+<input type="file" id="playlist-input" accept=".js,.m3u,.m3u8,audio/x-mpegurl,application/vnd.apple.mpegurl,text/plain" style="display:none;" onchange="app.loadPlaylistFile(this.files[0])">
 
 <div class="chassis">
     <div class="sidebar">
-        <div style="font-size: 11px; font-weight: 900; color: var(--sidebar-title); margin-bottom: 10px; letter-spacing: 2px;">ERNAMP v1.2</div>
+        <div style="font-size: 11px; font-weight: 900; color: var(--sidebar-title); margin-bottom: 10px; letter-spacing: 2px;">ERNDUB AUDIO v1.2</div>
         <input id="station-search" onkeydown="app.handleSearch(event)" placeholder="SEARCH STATIONS..." type="text"/>
         <div class="genre-list" id="genre-box"></div>
     </div>
@@ -757,8 +987,9 @@ body.compact .chassis {
         <div class="seek-wrapper">
             <div class="transport-cluster">
                 <div class="t-btn" title="Previous (Z)" onclick="app.playPrev()">|&lt;<span class="t-key">Z</span></div>
-                <div class="t-btn" title="Play (X)" onclick="app.toggleTransport()">▶<span class="t-key">X</span></div>
-                <div class="t-btn" title="Pause (C)" onclick="app.toggleTransport()">❚❚<span class="t-key">C</span></div>
+               
+                <div class="t-btn" title="Play / Pause (K or X/C)" onclick="app.toggleTransport()">▶❚❚<span class="t-key">K</span></div>
+            
                 <div class="t-btn" title="Stop (V)" onclick="app.stopStream()">■<span class="t-key">V</span></div>
                 <div class="t-btn" title="Next (B)" onclick="app.playNext()">&gt;|<span class="t-key">B</span></div>
             </div>
@@ -802,7 +1033,7 @@ body.compact .chassis {
             <button class="side-btn" onclick="document.getElementById('playlist-input').click()">LOAD<br>PL</button>
             <button class="side-btn" onclick="app.exportPlaylistJS()">EXP .JS</button>
             <button class="side-btn" onclick="app.exportPlaylistM3U()">EXP .M3U</button>
-            <button class="side-btn" onclick="document.getElementById('file-input').click()">LOCAL<br>FILES</button>
+            <button class="side-btn" onclick="app.openMyPlaylist()" title="My Files playlist">MY<br>FILES</button>
             <button class="side-btn" id="size-toggle-btn" onclick="app.toggleCompact()" title="Toggle compact size for small screens">SIZE<br>COMP</button>
             <button class="side-btn" id="forge-toggle-btn" onclick="app.toggleForge()">SKIN<br>FORGE</button>
         </div>
@@ -815,7 +1046,7 @@ body.compact .chassis {
             <div class="about-close" onclick="document.getElementById('about-modal').style.display='none'">×</div>
             <div class="about-header">SYSTEM INFORMATION</div>
             <div class="about-content">
-                <p><b>APP:</b> ERNAMP v1.2 (nearly there!) Hello Phil !!</p>
+                <p><b>APP:</b> ERNDUB AUDIO v1.2 (nearly there!) Hello Phil !!</p>
             </div>
         </div>
     </div>
@@ -987,6 +1218,7 @@ async init() {
     }
     this.updateModeUI();
     this.syncGamesMode();
+    this.syncUtilitiesMode();
     this.updateGainUI();
 
     // 3. Handle Last Played (local tracks now have fresh blob URLs from IDB)
@@ -1115,7 +1347,7 @@ async init() {
                 const drawer = document.getElementById('station-drawer');
                 if (!drawer || !drawer.classList.contains('open')) return;
                 if (drawer.contains(e.target)) return;
-                if (e.target.closest && e.target.closest('#station-search, .genre-item, .genre-list, .side-btn, .mgmt-btn')) return;
+                if (e.target.closest && e.target.closest('#station-search, .genre-item, .genre-list, .side-btn, .mgmt-btn, .local-mini, #drawer-header, #myfiles-url, #lm-url')) return;
                 this.closeDrawer();
             }, true);
         },
@@ -1332,12 +1564,15 @@ async init() {
         },
 
         setupHotkeys() {
-            // Z=prev, X=play, C=pause, V=stop, B=next, F=fullscreen, S=subtitles (video mode only)
+            // Z=prev X=play C=pause V=stop B=next
+            // J/K/L = YouTube-style −10s / play-pause / +10s (all modes, audio+video)
+            // F=fullscreen S=subtitles
             document.addEventListener('keydown', (e) => {
                 const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
                 if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target?.isContentEditable) return;
+                if (e.ctrlKey || e.metaKey || e.altKey) return;
                 const k = e.key.toLowerCase();
-                if (k === 'd' && !e.ctrlKey && !e.metaKey && !e.altKey) { this._showVizDebug = !this._showVizDebug; }
+                if (k === 'd') { this._showVizDebug = !this._showVizDebug; }
                 if (k === 'z') { e.preventDefault(); this.playPrev(); }
                 else if (k === 'x') {
                     e.preventDefault();
@@ -1346,6 +1581,18 @@ async init() {
                 else if (k === 'c') {
                     e.preventDefault();
                     if (this.isPlaying) this.toggleTransport();
+                }
+                else if (k === 'j') {
+                    e.preventDefault();
+                    this.seekBy(-10);
+                }
+                else if (k === 'k') {
+                    e.preventDefault();
+                    this.toggleTransport();
+                }
+                else if (k === 'l') {
+                    e.preventDefault();
+                    this.seekBy(10);
                 }
                 else if (k === 's') {
                     e.preventDefault();
@@ -1358,10 +1605,25 @@ async init() {
                 else if (k === 'v') { e.preventDefault(); this.stopStream(); }
                 else if (k === 'b') { e.preventDefault(); this.playNext(); }
                 else if (k === 'escape') {
-                    // Native FS already exits on Esc; hide chrome if still visible
                     this.bumpFsControls();
                 }
             });
+        },
+
+        /** YouTube-style relative seek. No-op on live streams. Works for audio + video. */
+        seekBy(seconds) {
+            if (!this.player || this.isLiveSource()) return;
+            const dur = this.player.duration();
+            let t = this.player.currentTime();
+            if (!Number.isFinite(t)) t = 0;
+            let next = t + seconds;
+            if (Number.isFinite(dur) && dur > 0) {
+                next = Math.max(0, Math.min(dur - 0.05, next));
+            } else {
+                next = Math.max(0, next);
+            }
+            try { this.player.currentTime(next); } catch (e) {}
+            this.bumpFsControls?.();
         },
 
         
@@ -1463,11 +1725,44 @@ startAnalysis() {
                     box.appendChild(el);
                 });
             }
-            // Local section
+            // Local section + discreet mini browser
             const localLbl = document.createElement('div'); localLbl.className = 'genre-section-lbl'; localLbl.innerText = "LOCAL"; box.appendChild(localLbl);
             const localEl = document.createElement('div'); localEl.className = 'genre-item'; localEl.innerText = "My Files";
             localEl.onclick = () => this.openMyPlaylist();
             box.appendChild(localEl);
+
+            const mini = document.createElement('div');
+            mini.className = 'local-mini';
+            mini.innerHTML = `
+                <div class="lm-row">
+                    <button type="button" class="lm-btn" id="lm-add-files" title="Add local media files">+ FILE</button>
+                    <button type="button" class="lm-btn" id="lm-add-folder" title="Add a local folder of media">FOLDER</button>
+                    <button type="button" class="lm-btn" id="lm-open-pl" title="Open My Files playlist">LIST</button>
+                </div>
+                <div class="lm-row">
+                    <input type="text" id="lm-url" placeholder="https://… / ftp://… / file URL" spellcheck="false" autocomplete="off"/>
+                    <button type="button" class="lm-btn" id="lm-add-url" title="Add remote URL">ADD</button>
+                </div>
+                <div class="lm-meta">mp3 m4a flac ogg wav webm mp4 · m3u · http(s) · web folder</div>
+            `;
+            box.appendChild(mini);
+            mini.querySelector('#lm-add-files').onclick = (e) => { e.stopPropagation(); document.getElementById('file-input').click(); };
+            mini.querySelector('#lm-add-folder').onclick = (e) => { e.stopPropagation(); document.getElementById('folder-input').click(); };
+            mini.querySelector('#lm-open-pl').onclick = (e) => { e.stopPropagation(); this.openMyPlaylist(); };
+            mini.querySelector('#lm-add-url').onclick = (e) => {
+                e.stopPropagation();
+                const inp = mini.querySelector('#lm-url');
+                this.addRemoteMedia(inp?.value || '');
+            };
+            mini.querySelector('#lm-url').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.addRemoteMedia(e.target.value || '');
+                }
+            });
+            // don't bubble clicks into genre handlers
+            mini.addEventListener('click', (e) => e.stopPropagation());
         },
 
         tune(uuid, auto = true) { 
@@ -1555,7 +1850,7 @@ startAnalysis() {
         // Metal / special class skins (e.g. "Silver Metal")
         document.body.className = (document.body.className || '')
             .split(/\s+/)
-            .filter(c => c && !c.startsWith('skin-'))
+            .filter(c => c && !c.startsWith('skin-') && !c.startsWith('anim-'))
             .join(' ');
         if (s.className) {
             String(s.className).split(/\s+/).filter(Boolean).forEach(c => document.body.classList.add(c));
@@ -1673,15 +1968,25 @@ startAnalysis() {
         this.openDrawer();
         const n = this.playlist.length;
         document.getElementById('drawer-header').innerHTML = `
-            <div style="font-size:10px;padding:10px;font-weight:900;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
-                <span>MY FILES (${n})</span>
-                <span style="display:flex;gap:6px;">
-                    <button class="mgmt-btn" style="margin:0;padding:4px 8px;" onclick="document.getElementById('file-input').click()">ADD FILES</button>
-                    <button class="mgmt-btn" style="margin:0;padding:4px 8px;" onclick="app.clearPlaylist()">CLEAR ALL</button>
-                </span>
+            <div class="myfiles-row">
+                <span class="myfiles-title">MY FILES (${n})</span>
+                <button type="button" class="lm-btn" onclick="document.getElementById('file-input').click()">+ FILE</button>
+                <button type="button" class="lm-btn" onclick="document.getElementById('folder-input').click()">FOLDER</button>
+                <button type="button" class="lm-btn" onclick="app.clearPlaylist()">CLEAR</button>
+                <input type="text" id="myfiles-url" placeholder="https://… / m3u / folder" spellcheck="false" autocomplete="off"/>
+                <button type="button" class="lm-btn" onclick="app.addRemoteMedia(document.getElementById('myfiles-url').value)">ADD URL</button>
             </div>
-            <div style="font-size:7px;color:var(--skin-text-dim);padding:0 10px 8px;">▲▼ reorder · ✕ remove · click name to play · persists across refresh</div>`;
+            <div class="myfiles-hint">▲▼ reorder · ✕ remove · local persists · http(s) / m3u · J K L = −10s / play / +10s</div>`;
         this.renderList(this.playlist, { editor: true });
+        const urlInp = document.getElementById('myfiles-url');
+        if (urlInp) {
+            urlInp.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.addRemoteMedia(urlInp.value);
+                }
+            });
+        }
     },
 
     async persistPlaylistMeta() {
@@ -1828,7 +2133,30 @@ startAnalysis() {
         this.updateModeUI();
         localStorage.setItem('erndub_mode', this.mIdx);
         this.syncGamesMode();
+        this.syncUtilitiesMode();
     },
+
+        // ---------- UTILITIES (Open Dir / Drive / Links) ----------
+        syncUtilitiesMode() {
+            const modes = window.MODES || [];
+            const mode = String(modes[this.mIdx] || '').toUpperCase().replace(/\s+/g, '_');
+            const active = mode === 'UTILITIES' || mode === 'UTILITIES_MODE' || mode === 'UTILITY' || mode === 'UTILS';
+            try {
+                if (window.UtilitiesMode && typeof window.UtilitiesMode.sync === 'function') {
+                    window.UtilitiesMode.sync(!!active);
+                    return;
+                }
+            } catch (e) {
+                console.warn('[erndub] UtilitiesMode.sync failed', e);
+            }
+            const stage = document.getElementById('stage');
+            if (stage) stage.classList.remove('utilities-mode-active');
+            const layer = document.getElementById('utilities-layer');
+            if (layer) {
+                layer.style.removeProperty('display');
+                layer.setAttribute('aria-hidden', 'true');
+            }
+        },
 
         // ---------- ARCADE / GAMES ----------
         syncGamesMode() {
@@ -1924,7 +2252,9 @@ startAnalysis() {
                 this.mountRuffle(g.src, host);
                 return;
             }
-            if (g.type === 'iframe' || g.type === 'itch' || g.type === 'url' || g.type === 'embed' || g.type === 'html') {
+            // iframe / itch / url / embed / non-inline html all go through the same host
+            if (g.type === 'iframe' || g.type === 'itch' || g.type === 'url' || g.type === 'embed' ||
+                (g.type === 'html' && !g.inline)) {
                 this.mountIframeGame(g, host);
                 return;
             }
@@ -1935,22 +2265,34 @@ startAnalysis() {
             if (!g.src) {
                 host.innerHTML = `
                   <div style="color:#ccc;font:12px monospace;padding:20px;text-align:center;line-height:1.5">
-                    No URL set.<br>Edit <b>games.js</b> and set <b>src</b> to an itch.io embed or HTTPS game page.<br><br>
-                    itch → game page → <b>Share</b> / embed-upload link, or any HTML5 game URL.
+                    No URL set.<br>Edit <b>games.js</b> and set <b>src</b> on this entry.<br><br>
+                    Supported: itch embed-upload, retrogames.cc embed, any HTTPS HTML5 page that allows framing.<br>
+                    type: <b>iframe</b> · <b>itch</b> · <b>url</b> · <b>embed</b>
                   </div>`;
                 return;
             }
             const iframe = document.createElement('iframe');
             iframe.src = g.src;
-            iframe.allow = 'gamepad; fullscreen; autoplay; keyboard-map';
-            iframe.referrerPolicy = 'no-referrer-when-downgrade';
+            iframe.title = g.title || g.id || 'game';
+            iframe.allow = 'gamepad; fullscreen; autoplay; keyboard-map; accelerometer; gyroscope';
+            iframe.setAttribute('allowfullscreen', '');
+            iframe.setAttribute('webkitallowfullscreen', '');
+            iframe.setAttribute('mozallowfullscreen', '');
+            // permissive enough for most embeds; tighten per-game via g.sandbox if needed
+            iframe.sandbox = g.sandbox || 'allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups allow-modals allow-downloads';
+            iframe.referrerPolicy = g.referrerPolicy || 'no-referrer-when-downgrade';
+            iframe.loading = 'eager';
             iframe.tabIndex = 0;
-            iframe.style.width = '100%';
-            iframe.style.height = '100%';
-            iframe.style.border = '0';
-            iframe.style.background = '#000';
+            iframe.style.cssText = 'width:100%;height:100%;border:0;background:#000;display:block';
+            iframe.onerror = () => {
+                host.innerHTML = `<div style="color:#f86;font:12px monospace;padding:16px;text-align:center">
+                  Failed to load iframe.<br><span style="opacity:.7;font-size:10px">${this.escHtml(g.src)}</span>
+                </div>`;
+            };
             host.appendChild(iframe);
-            try { iframe.focus(); } catch (e) {}
+            this._iframeEl = iframe;
+            // focus after a tick so the frame can take keyboard/gamepad
+            setTimeout(() => { try { iframe.focus(); } catch (e) {} }, 80);
         },
 
         mountEmulator(g, host) {
@@ -2062,7 +2404,7 @@ startAnalysis() {
             const keys = Object.create(null);
             const onKey = (e, down) => {
                 keys[e.key] = down;
-                if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','Enter','z','Z','x','X','w','W','a','A','s','S','p','P','r','R'].includes(e.key)) {
+                if (/^(ArrowUp|ArrowDown|ArrowLeft|ArrowRight| |Enter|[zxXwWaAsSpPrRcCeEqQgGdD\[\]+\-=]|[0-9])$/.test(e.key)) {
                     e.preventDefault();
                 }
             };
@@ -2192,6 +2534,7 @@ startAnalysis() {
             this._gameRunning = false;
             this._activeGame = null;
             this._rufflePlayer = null;
+            this._iframeEl = null;
             try { if (this._inlineHandle && this._inlineHandle.stop) this._inlineHandle.stop(); } catch (e) {}
             this._inlineHandle = null;
             if (this._inlineKeyCleanup) { this._inlineKeyCleanup(); this._inlineKeyCleanup = null; }
@@ -2334,29 +2677,58 @@ startAnalysis() {
         setTimeout(() => URL.revokeObjectURL(url), 2000);
     },
 
+    isMediaFileName(name) {
+        return /\.(mp3|m4a|aac|ogg|opus|flac|wav|webm|mp4|m4v|mkv|mov|avi|ogv)$/i.test(name || '');
+    },
+    isPlaylistFileName(name) {
+        return /\.(m3u8?|js)$/i.test(name || '');
+    },
+    guessMime(name, fallback) {
+        const n = (name || '').toLowerCase();
+        if (n.endsWith('.mp3')) return 'audio/mpeg';
+        if (n.endsWith('.m4a') || n.endsWith('.aac')) return 'audio/mp4';
+        if (n.endsWith('.ogg') || n.endsWith('.opus')) return 'audio/ogg';
+        if (n.endsWith('.flac')) return 'audio/flac';
+        if (n.endsWith('.wav')) return 'audio/wav';
+        if (n.endsWith('.webm')) return 'video/webm';
+        if (n.endsWith('.mp4') || n.endsWith('.m4v')) return 'video/mp4';
+        if (n.endsWith('.mkv')) return 'video/x-matroska';
+        if (n.endsWith('.mov')) return 'video/quicktime';
+        return fallback || 'audio/mpeg';
+    },
+
     async handleFiles(files) {
         const list = Array.from(files || []);
+        let added = 0;
         for (let f of list) {
-            if (!f.type.startsWith('audio/') && !f.type.startsWith('video/')) continue;
+            const name = f.name || '';
+            // Nested playlist files from a folder pick
+            if (this.isPlaylistFileName(name) && !f.type.startsWith('audio/') && !f.type.startsWith('video/')) {
+                try { await this.loadPlaylistFile(f); } catch (e) {}
+                continue;
+            }
+            const isMedia = (f.type && (f.type.startsWith('audio/') || f.type.startsWith('video/'))) || this.isMediaFileName(name);
+            if (!isMedia) continue;
             const uuid = 'local_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
             const order = this.playlist.length;
             const blobUrl = URL.createObjectURL(f);
+            const fileType = f.type || this.guessMime(name);
             const track = {
-                name: f.name,
+                name: name,
                 stationuuid: uuid,
                 isLocal: true,
-                fileType: f.type || 'audio/mpeg',
+                fileType,
                 url_resolved: blobUrl,
                 order
             };
             this.playlist.push(track);
             this.allStationsMap.set(uuid, track);
-            // Persist blob so it survives refresh
+            added++;
             try {
                 await idbPutTrack({
                     stationuuid: uuid,
-                    name: f.name,
-                    fileType: f.type || 'audio/mpeg',
+                    name,
+                    fileType,
                     blob: f,
                     order
                 });
@@ -2367,6 +2739,132 @@ startAnalysis() {
         if (this.playlistIdx < 0 && this.playlist.length) this.playlistIdx = 0;
         localStorage.setItem('erndub_pl_idx', String(this.playlistIdx));
         this.openMyPlaylist();
+        if (added === 0 && list.length) {
+            // soft hint — empty folder / wrong types
+            console.info('[erndub] no media files matched in selection');
+        }
+    },
+
+    /**
+     * Add a remote media URL, m3u playlist URL, or simple web-folder index.
+     * Supports http(s). ftp:// is accepted but browsers block raw FTP fetch —
+     * use an http gateway or paste a direct http link instead.
+     */
+    async addRemoteMedia(raw) {
+        let url = String(raw || '').trim();
+        if (!url) return;
+        // bare host/path → assume https
+        if (!/^[a-z][a-z0-9+.-]*:/i.test(url)) url = 'https://' + url;
+
+        let parsed;
+        try { parsed = new URL(url); } catch (e) {
+            alert('Invalid URL');
+            return;
+        }
+
+        const proto = parsed.protocol.toLowerCase();
+        if (proto === 'ftp:') {
+            alert('Browsers block raw FTP. Use an http(s) link, a web folder, or an FTP→HTTP gateway.');
+            return;
+        }
+        if (proto !== 'http:' && proto !== 'https:') {
+            alert('Only http(s) remote URLs are supported in-browser.');
+            return;
+        }
+
+        const path = parsed.pathname || '';
+        const lower = path.toLowerCase();
+
+        // Playlist URL
+        if (/\.m3u8?$/i.test(lower) || /[?&](m3u|playlist)=/i.test(url)) {
+            try {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const text = await res.text();
+                const fake = new File([text], path.split('/').pop() || 'remote.m3u', { type: 'audio/x-mpegurl' });
+                await this.loadPlaylistFile(fake);
+            } catch (e) {
+                alert('Could not load remote playlist (CORS or network): ' + (e.message || e));
+            }
+            return;
+        }
+
+        // Direct media file
+        if (this.isMediaFileName(path)) {
+            this.pushRemoteTrack(url, decodeURIComponent(path.split('/').pop() || 'Remote media'));
+            this.openMyPlaylist();
+            return;
+        }
+
+        // Trailing slash or no extension → try directory index scrape
+        if (path.endsWith('/') || !/\.[a-z0-9]{2,5}$/i.test(path)) {
+            const folderUrl = path.endsWith('/') ? url : url.replace(/\/?$/, '/');
+            try {
+                const res = await fetch(folderUrl);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const html = await res.text();
+                const found = this.parseDirectoryIndex(html, folderUrl);
+                if (!found.length) {
+                    alert('No media links found in that folder index (or CORS blocked listing).');
+                    return;
+                }
+                let n = 0;
+                for (const item of found) {
+                    if (this.pushRemoteTrack(item.href, item.name)) n++;
+                }
+                this.openMyPlaylist();
+                alert(`Added ${n} item${n === 1 ? '' : 's'} from web folder.`);
+            } catch (e) {
+                alert('Web folder listing failed (often CORS). Paste a direct file URL instead.\n' + (e.message || e));
+            }
+            return;
+        }
+
+        // Unknown path — still try as stream/media URL
+        this.pushRemoteTrack(url, decodeURIComponent(path.split('/').pop() || parsed.hostname));
+        this.openMyPlaylist();
+    },
+
+    pushRemoteTrack(url, name) {
+        if (!url) return false;
+        if (this.playlist.some(p => p.url_resolved === url || p.url === url)) return false;
+        const uuid = 'remote_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        const track = {
+            name: name || 'Remote',
+            stationuuid: uuid,
+            isLocal: false,
+            isRemote: true,
+            fileType: this.guessMime(name || url),
+            url,
+            url_resolved: url
+        };
+        this.playlist.push(track);
+        this.allStationsMap.set(uuid, track);
+        if (this.playlistIdx < 0) this.playlistIdx = 0;
+        localStorage.setItem('erndub_pl_idx', String(this.playlistIdx));
+        return true;
+    },
+
+    /** Very small Apache/nginx-style directory index scraper */
+    parseDirectoryIndex(html, baseUrl) {
+        const out = [];
+        const seen = new Set();
+        const re = /href\s*=\s*["']([^"']+)["']/gi;
+        let m;
+        while ((m = re.exec(html))) {
+            let href = m[1];
+            if (!href || href.startsWith('?') || href.startsWith('#') || href.startsWith('javascript:')) continue;
+            if (href === '../' || href === './') continue;
+            let abs;
+            try { abs = new URL(href, baseUrl).href; } catch (e) { continue; }
+            if (seen.has(abs)) continue;
+            const name = decodeURIComponent((href.split('/').filter(Boolean).pop() || href));
+            if (this.isMediaFileName(name) || this.isPlaylistFileName(name)) {
+                seen.add(abs);
+                out.push({ href: abs, name });
+            }
+        }
+        return out;
     },
 
     async loadPlaylistFile(file) {
