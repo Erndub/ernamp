@@ -1,21 +1,24 @@
 /* ═══════════════════════════════════════════════════════════
-   ERNDUB AUDIO – Animated Skin Keyframes
-   Drop this into your main stylesheet (or link it).
-   Matches the className values used in the animated skins.
-   Classes are applied to <body>; effects target .chassis where needed.
+   ERNDUB – Animated Skin Keyframes (funky pack)
+   Link from the player HTML:
+     <link rel="stylesheet" href="animated-skins.css"/>
+   Applied via skin.className on <body>:
+     anim-pulse-glow, anim-rainbow-border, anim-wave-bg,
+     anim-glitter, anim-matrix-rain
    ═══════════════════════════════════════════════════════════ */
 
-/* Pulse Neon – soft breathing glow on borders / accent */
-.anim-pulse-glow {
+/* ── Pulse glow ─────────────────────────────────────────── */
+body.anim-pulse-glow .chassis,
+.anim-pulse-glow.chassis {
   animation: pulse-glow 2.4s ease-in-out infinite;
 }
 @keyframes pulse-glow {
   0%, 100% { filter: brightness(1); }
-  50%      { filter: brightness(1.15) drop-shadow(0 0 14px var(--skin-accent, #ff00aa)); }
+  50%      { filter: brightness(1.15) drop-shadow(0 0 14px var(--skin-accent)); }
 }
 
-/* Rainbow Flow – cycling border colour */
-.anim-rainbow-border {
+/* ── Rainbow border (animates --skin-border on body) ────── */
+body.anim-rainbow-border {
   animation: rainbow-border 6s linear infinite;
 }
 @keyframes rainbow-border {
@@ -27,17 +30,9 @@
   100% { --skin-border: #ff6b6b; }
 }
 
-/* Wave Drift – force a tall gradient so position shift is visible even on solid skins */
-.anim-wave-bg .chassis {
-  background-image: linear-gradient(
-    180deg,
-    var(--skin-bg) 0%,
-    color-mix(in srgb, var(--skin-accent) 22%, var(--skin-bg)) 40%,
-    var(--skin-bg) 70%,
-    color-mix(in srgb, var(--skin-accent) 14%, var(--skin-bg)) 100%
-  ) !important;
-  background-size: 100% 220% !important;
-  background-position: 0% 0%;
+/* ── Wave background (needs a gradient --skin-bg) ───────── */
+body.anim-wave-bg .chassis {
+  background-size: 100% 200% !important;
   animation: wave-bg 8s ease-in-out infinite;
 }
 @keyframes wave-bg {
@@ -45,11 +40,11 @@
   50%      { background-position: 0% 100%; }
 }
 
-/* Glitter Bomb – sparkle overlay via pseudo-element on chassis */
-.anim-glitter {
+/* ── Glitter sparkles overlay ───────────────────────────── */
+body.anim-glitter {
   position: relative;
 }
-.anim-glitter .chassis::after {
+body.anim-glitter .chassis::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -73,28 +68,30 @@
   100% { background-position: 0 0, 20px 30px, 40px 10px, 60px 50px, 80px 20px; opacity: 0.4; }
 }
 
-/* Matrix Rain – scanlines on a dedicated overlay so they always animate visibly */
-.anim-matrix-rain .chassis {
+/* ── Matrix rain (coarse scanlines above chassis paint) ─── */
+body.anim-matrix-rain .chassis {
   position: relative;
 }
-.anim-matrix-rain .chassis::after {
+body.anim-matrix-rain .chassis::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 50;
+  z-index: 45;
+  /* Coarser scanlines: ~12px gap, ~5px green band */
   background-image: repeating-linear-gradient(
     0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 255, 65, 0.12) 2px,
-    rgba(0, 255, 65, 0.12) 4px
+    transparent 0px,
+    transparent 12px,
+    rgba(0, 255, 65, 0.14) 12px,
+    rgba(0, 255, 65, 0.14) 17px
   );
-  background-size: 100% 40px;
-  animation: matrix-rain 2.5s linear infinite;
+  background-size: 100% 34px;
+  background-repeat: repeat;
+  animation: matrix-rain 2.2s linear infinite;
   mix-blend-mode: screen;
 }
 @keyframes matrix-rain {
   0%   { background-position: 0 0; }
-  100% { background-position: 0 40px; }
+  100% { background-position: 0 34px; }
 }

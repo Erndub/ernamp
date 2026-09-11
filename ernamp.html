@@ -5,6 +5,7 @@
 <title>erndub audio | v0.9 Modular</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet"/>
 <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet"/>
+<link rel="stylesheet" href="animated-skins.css"/>
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 
 <script src="skins.js"></script>
@@ -15,7 +16,7 @@
 <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
 
 <style>
-    .ohno-face { width: 140px; height: 140px; position: absolute; bottom: 0px; right: 28px; z-index: 999; transform: scale(0.35) rotate(30deg); transform-origin: bottom right; border: 8px solid var(--skin-accent); border-radius: 50%; background-color: transparent; background-image: radial-gradient(circle at 50% 80%, var(--skin-accent) 7%, transparent 8%), radial-gradient(ellipse 17% 30% at 66% 45%, var(--skin-accent) 95%, transparent 100%), radial-gradient(ellipse 17% 30% at 34% 45%, var(--skin-accent) 95%, transparent 100%); background-repeat: no-repeat; animation: blink 9s infinite; filter: drop-shadow(0 0 2px var(--skin-accent)); transition: all 0.5s ease; cursor: pointer; }
+    .ohno-face { width: 140px; height: 140px; position: absolute; bottom: 0px; right: 24px; z-index: 999; transform: scale(0.35) rotate(30deg); transform-origin: bottom right; border: 8px solid var(--skin-accent); border-radius: 50%; background-color: transparent; background-image: radial-gradient(circle at 50% 80%, var(--skin-accent) 7%, transparent 8%), radial-gradient(ellipse 17% 30% at 66% 45%, var(--skin-accent) 95%, transparent 100%), radial-gradient(ellipse 17% 30% at 34% 45%, var(--skin-accent) 95%, transparent 100%); background-repeat: no-repeat; animation: blink 9s infinite; filter: drop-shadow(0 0 2px var(--skin-accent)); transition: all 0.5s ease; cursor: pointer; }
     .ohno-face:hover { filter: drop-shadow(0 0 12px var(--skin-accent)) brightness(1.2); }
     @keyframes blink { 0%,96%,100% { background-image: radial-gradient(circle at 50% 80%, var(--skin-accent) 7%, transparent 8%), radial-gradient(ellipse 17% 30% at 66% 45%, var(--skin-accent) 95%, transparent 100%), radial-gradient(ellipse 17% 30% at 34% 45%, var(--skin-accent) 95%, transparent 100%); } 97%,99% { background-image: radial-gradient(circle at 50% 80%, var(--skin-accent) 7%, transparent 8%), radial-gradient(ellipse 17% 2% at 66% 45%, var(--skin-accent) 95%, transparent 100%), radial-gradient(ellipse 17% 2% at 34% 45%, var(--skin-accent) 95%, transparent 100%); } }
     .about-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(4px); }
@@ -762,7 +763,7 @@ body.compact .chassis {
     .seek-time { font-size: 9px; color: var(--skin-text); font-weight: 800; min-width: 35px; text-align: center; }
     #stage-station { position: absolute; top: 12px; left: 20px; font-size: 11px; font-weight: 900; color: var(--station-text); text-transform: uppercase; z-index: 20; pointer-events: none; text-shadow: 0 0 6px #000; }
     .telemetry { color: var(--telemetry-text); }
-    .side-controls { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 10px; justify-content: center; transform: translateY(-26px); }
+    .side-controls { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 10px; justify-content: center; transform: translateY(-4px); }
    .side-btn { 
     width: 38px; 
     height: 38px; 
@@ -801,6 +802,315 @@ body.compact .chassis {
     color: var(--skin-panel);
     border-color: var(--skin-text);
 }
+
+/* ═══ EQ LEFT SIDEBAR TRAY (full EQ + spectrum) ═══ */
+.eq-tray {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    z-index: 90;
+    overflow: hidden;
+    transition: width 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+}
+.eq-tray.open {
+    width: 268px;
+    pointer-events: auto;
+}
+.eq-tray-inner {
+    width: 268px;
+    height: 100%;
+    /* Solid panel fill — never translucent so CRT/stage never shows through */
+    background-color: var(--skin-panel);
+    background-image: none;
+    border-right: 2px solid var(--skin-border);
+    box-shadow: 10px 0 28px var(--skin-shadow);
+    display: flex;
+    flex-direction: column;
+    padding: 10px 10px 12px;
+    box-sizing: border-box;
+    color: var(--skin-text);
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    isolation: isolate;
+    opacity: 1;
+}
+.eq-tray-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--skin-border);
+    flex-shrink: 0;
+}
+.eq-tray-title {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 1.8px;
+    color: var(--skin-accent);
+    text-transform: uppercase;
+}
+.eq-tray-close {
+    background: none;
+    border: none;
+    color: var(--skin-text-dim);
+    font-size: 16px;
+    font-weight: 900;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+}
+.eq-tray-close:hover { color: var(--skin-accent); }
+
+/* Live spectrum strip */
+.eq-spectrum-wrap {
+    flex-shrink: 0;
+    height: 56px;
+    margin-bottom: 8px;
+    border: 1px solid var(--skin-border);
+    border-radius: 4px;
+    background: var(--crt-bg, #0a0a0a);
+    overflow: hidden;
+    position: relative;
+}
+#eq-spectrum {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+.eq-spec-controls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+}
+.eq-spec-controls .eq-h-label {
+    font-size: 6.5px;
+    font-weight: 900;
+    letter-spacing: 0.8px;
+    color: var(--skin-text-dim);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+.eq-spec-controls input[type="range"] {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Horizontal themed range (preamp, pitch, spectrum gain) */
+.eq-h-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 14px;
+    background: transparent;
+    cursor: pointer;
+}
+.eq-h-slider::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(to right, rgba(0,0,0,0.12), var(--skin-accent));
+    border: 1px solid var(--skin-border);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+}
+.eq-h-slider::-moz-range-track {
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(to right, rgba(0,0,0,0.12), var(--skin-accent));
+    border: 1px solid var(--skin-border);
+}
+.eq-h-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-image: var(--knob-main);
+    background-color: var(--skin-panel);
+    border: 2px solid var(--skin-border);
+    box-shadow: 1px 2px 5px var(--skin-shadow);
+    cursor: grab;
+    margin-top: -5px;
+}
+.eq-h-slider::-webkit-slider-thumb:hover {
+    border-color: var(--skin-accent);
+    box-shadow: 0 0 8px var(--skin-accent);
+}
+.eq-h-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-image: var(--knob-main);
+    background-color: var(--skin-panel);
+    border: 2px solid var(--skin-border);
+    box-shadow: 1px 2px 5px var(--skin-shadow);
+    cursor: grab;
+}
+
+.eq-section-lbl {
+    font-size: 7px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: var(--skin-text-dim);
+    text-transform: uppercase;
+    margin: 4px 0 4px;
+    flex-shrink: 0;
+}
+.eq-preamp-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 6px;
+    flex-shrink: 0;
+}
+.eq-preamp-row .eq-pitch-label { margin: 0; }
+
+.eq-bands {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 1px;
+    flex: 1 1 auto;
+    min-height: 180px;
+    padding: 2px 0 4px;
+}
+.eq-band {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    gap: 3px;
+}
+.eq-band label {
+    font-size: 6px;
+    font-weight: 800;
+    color: var(--skin-text-dim);
+    letter-spacing: 0.2px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+.eq-slider-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    position: relative;
+    min-height: 130px;
+}
+.eq-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 118px;
+    height: 12px;
+    background: transparent;
+    transform: rotate(-90deg);
+    transform-origin: center center;
+    cursor: pointer;
+    margin: 0;
+    padding: 0;
+}
+.eq-slider::-webkit-slider-runnable-track {
+    height: 5px;
+    border-radius: 3px;
+    background: linear-gradient(to right, rgba(0,0,0,0.15), var(--skin-accent) 50%, rgba(0,0,0,0.15));
+    border: 1px solid var(--skin-border);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.25);
+}
+.eq-slider::-moz-range-track {
+    height: 5px;
+    border-radius: 3px;
+    background: linear-gradient(to right, rgba(0,0,0,0.15), var(--skin-accent) 50%, rgba(0,0,0,0.15));
+    border: 1px solid var(--skin-border);
+}
+.eq-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background-image: var(--knob-main);
+    background-color: var(--skin-panel);
+    border: 2px solid var(--skin-border);
+    box-shadow: 1px 2px 5px var(--skin-shadow);
+    cursor: grab;
+    margin-top: -5px;
+}
+.eq-slider::-webkit-slider-thumb:hover {
+    border-color: var(--skin-accent);
+    box-shadow: 0 0 8px var(--skin-accent);
+}
+.eq-slider::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background-image: var(--knob-main);
+    background-color: var(--skin-panel);
+    border: 2px solid var(--skin-border);
+    box-shadow: 1px 2px 5px var(--skin-shadow);
+    cursor: grab;
+}
+.eq-band-val {
+    font-size: 6.5px;
+    font-weight: 800;
+    color: var(--skin-accent);
+    min-width: 22px;
+    text-align: center;
+}
+
+.eq-footer-row {
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px solid var(--skin-border);
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    flex-shrink: 0;
+}
+.eq-pitch-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.eq-pitch-label {
+    font-size: 7px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: var(--skin-text-dim);
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+}
+.eq-pitch-label span { color: var(--skin-accent); }
+.eq-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+}
+.eq-presets .mgmt-btn {
+    margin: 0;
+    flex: 1 1 auto;
+    min-width: 52px;
+    padding: 4px 3px;
+    font-size: 6.5px;
+}
+.eq-actions {
+    display: flex;
+    gap: 4px;
+}
+.eq-actions .mgmt-btn {
+    margin: 0;
+    flex: 1;
+    padding: 5px 4px;
+    font-size: 7px;
+}
+
     .led {
         width: 8px;
         height: 8px;
@@ -841,107 +1151,12 @@ body.compact .chassis {
     body.forge-mode .seek-wrapper { display: none; }
     body.forge-mode .seek-bar,
     body.forge-mode .t-btn { pointer-events: none; }
-
-    #forge-toggle-btn {
-        position: relative;
-        left: 0px;  /* Moves it right */
-    }
-
-/* ═══════════════════════════════════════════════════════════
-   ERNDUB – Animated Skin Keyframes (funky pack)
-   Applied via skin.className: anim-pulse-glow, anim-rainbow-border,
-   anim-wave-bg, anim-glitter, anim-matrix-rain
-   ═══════════════════════════════════════════════════════════ */
-.anim-pulse-glow {
-  animation: pulse-glow 2.4s ease-in-out infinite;
-}
-@keyframes pulse-glow {
-  0%, 100% { filter: brightness(1); }
-  50%      { filter: brightness(1.15) drop-shadow(0 0 14px var(--skin-accent)); }
+#forge-toggle-btn {
+    position: relative;
+    left: 0px;
 }
 
-.anim-rainbow-border {
-  animation: rainbow-border 6s linear infinite;
-}
-@keyframes rainbow-border {
-  0%   { --skin-border: #ff6b6b; }
-  20%  { --skin-border: #feca57; }
-  40%  { --skin-border: #48dbfb; }
-  60%  { --skin-border: #ff9ff3; }
-  80%  { --skin-border: #1dd1a1; }
-  100% { --skin-border: #ff6b6b; }
-}
-
-/* Wave Drift – force a tall gradient so position shift is visible even on solid skins */
-.anim-wave-bg .chassis {
-  background-image: linear-gradient(
-    180deg,
-    var(--skin-bg) 0%,
-    color-mix(in srgb, var(--skin-accent) 22%, var(--skin-bg)) 40%,
-    var(--skin-bg) 70%,
-    color-mix(in srgb, var(--skin-accent) 14%, var(--skin-bg)) 100%
-  ) !important;
-  background-size: 100% 220% !important;
-  background-position: 0% 0%;
-  animation: wave-bg 8s ease-in-out infinite;
-}
-@keyframes wave-bg {
-  0%, 100% { background-position: 0% 0%; }
-  50%      { background-position: 0% 100%; }
-}
-
-.anim-glitter {
-  position: relative;
-}
-.anim-glitter .chassis::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 50;
-  background-image:
-    radial-gradient(1.5px 1.5px at 10% 20%, #fff 50%, transparent 50%),
-    radial-gradient(1.5px 1.5px at 30% 70%, #ffd700 50%, transparent 50%),
-    radial-gradient(1.5px 1.5px at 60% 30%, #fff 50%, transparent 50%),
-    radial-gradient(1.5px 1.5px at 80% 80%, #ffd700 50%, transparent 50%),
-    radial-gradient(1.5px 1.5px at 50% 50%, #fff 50%, transparent 50%);
-  background-size: 120px 120px;
-  opacity: 0.55;
-  animation: glitter 1.8s steps(4) infinite;
-}
-@keyframes glitter {
-  0%   { background-position: 0 0, 20px 30px, 40px 10px, 60px 50px, 80px 20px; opacity: 0.4; }
-  25%  { background-position: 10px 15px, 30px 45px, 50px 25px, 70px 65px, 90px 35px; opacity: 0.7; }
-  50%  { background-position: 20px 30px, 40px 60px, 60px 40px, 80px 80px, 100px 50px; opacity: 0.45; }
-  75%  { background-position: 5px 10px, 25px 40px, 45px 20px, 65px 55px, 85px 30px; opacity: 0.8; }
-  100% { background-position: 0 0, 20px 30px, 40px 10px, 60px 50px, 80px 20px; opacity: 0.4; }
-}
-
-/* Matrix Rain – scanlines on a dedicated overlay so they always animate visibly */
-.anim-matrix-rain .chassis {
-  position: relative;
-}
-.anim-matrix-rain .chassis::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 50;
-  background-image: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 255, 65, 0.12) 2px,
-    rgba(0, 255, 65, 0.12) 4px
-  );
-  background-size: 100% 40px;
-  animation: matrix-rain 2.5s linear infinite;
-  mix-blend-mode: screen;
-}
-@keyframes matrix-rain {
-  0%   { background-position: 0 0; }
-  100% { background-position: 0 40px; }
-}
+/* Animated skins live in animated-skins.css */
 
 </style>
 </head>
@@ -1035,7 +1250,55 @@ body.compact .chassis {
             <button class="side-btn" onclick="app.exportPlaylistM3U()">EXP .M3U</button>
             <button class="side-btn" onclick="app.openMyPlaylist()" title="My Files playlist">MY<br>FILES</button>
             <button class="side-btn" id="size-toggle-btn" onclick="app.toggleCompact()" title="Toggle compact size for small screens">SIZE<br>COMP</button>
+            <button class="side-btn" id="eq-toggle-btn" onclick="app.toggleEqTray()" title="Equaliser & pitch">EQ</button>
             <button class="side-btn" id="forge-toggle-btn" onclick="app.toggleForge()">SKIN<br>FORGE</button>
+        </div>
+    </div>
+
+    <!-- EQ slide-out tray from LEFT sidebar -->
+    <div id="eq-tray" class="eq-tray" aria-hidden="true">
+        <div class="eq-tray-inner">
+            <div class="eq-tray-header">
+                <span class="eq-tray-title">EQUALISER</span>
+                <button type="button" class="eq-tray-close" onclick="app.toggleEqTray(false)" title="Close">×</button>
+            </div>
+            <div class="eq-spectrum-wrap">
+                <canvas id="eq-spectrum" width="248" height="56"></canvas>
+            </div>
+            <div class="eq-spec-controls">
+                <span class="eq-h-label">SPEC GAIN</span>
+                <input type="range" class="eq-h-slider" id="eq-spec-gain" min="0.4" max="3" step="0.05" value="1.2"
+                       oninput="app.setSpecGain(this.value)" title="Spectrum sensitivity">
+                <span class="eq-h-label" id="eq-spec-gain-val">1.2×</span>
+            </div>
+            <div class="eq-section-lbl">PREAMP</div>
+            <div class="eq-preamp-row">
+                <div class="eq-pitch-label">GAIN <span id="eq-preamp-val">0 dB</span></div>
+                <input type="range" class="eq-h-slider" id="eq-preamp" min="-12" max="12" step="0.5" value="0"
+                       oninput="app.setPreamp(this.value)">
+            </div>
+            <div class="eq-section-lbl">GRAPHIC EQ</div>
+            <div class="eq-bands" id="eq-bands"></div>
+            <div class="eq-footer-row">
+                <div class="eq-pitch-row">
+                    <div class="eq-pitch-label">PITCH / SPEED <span id="eq-pitch-val">1.00×</span></div>
+                    <input type="range" class="eq-h-slider" id="eq-pitch" min="0.5" max="2" step="0.01" value="1"
+                           oninput="app.setPlaybackRate(this.value)">
+                </div>
+                <div class="eq-section-lbl" style="margin:0">PRESETS</div>
+                <div class="eq-presets">
+                    <button type="button" class="mgmt-btn" onclick="app.applyEqPreset('flat')">FLAT</button>
+                    <button type="button" class="mgmt-btn" onclick="app.applyEqPreset('bass')">BASS</button>
+                    <button type="button" class="mgmt-btn" onclick="app.applyEqPreset('treble')">TREBLE</button>
+                    <button type="button" class="mgmt-btn" onclick="app.applyEqPreset('vshape')">V</button>
+                    <button type="button" class="mgmt-btn" onclick="app.applyEqPreset('vocal')">VOCAL</button>
+                    <button type="button" class="mgmt-btn" onclick="app.applyEqPreset('electronic')">ELEC</button>
+                </div>
+                <div class="eq-actions">
+                    <button type="button" class="mgmt-btn" onclick="app.resetEq()">RESET EQ</button>
+                    <button type="button" class="mgmt-btn" onclick="app.resetPitch()">1× SPEED</button>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -1121,6 +1384,26 @@ body.compact .chassis {
         rumpleOrbs: Array.from({ length: 1500 }, () => ({ x: Math.random()*1080, y: Math.random()*700, r: Math.random()*3+1, opacity: Math.random()*0.4, speed: Math.random()*0.4+0.1 })),
         rumpleParticles: [],
         particles: Array.from({ length: 150 }, () => ({ x: Math.random()*1080, y: Math.random()*700, vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2, life: Math.random() })),
+        // 10-band graphic EQ (Hz) + gains (dB, -12..+12)
+        eqBands: [
+            { f: 31, label: '31' },
+            { f: 62, label: '62' },
+            { f: 125, label: '125' },
+            { f: 250, label: '250' },
+            { f: 500, label: '500' },
+            { f: 1000, label: '1k' },
+            { f: 2000, label: '2k' },
+            { f: 4000, label: '4k' },
+            { f: 8000, label: '8k' },
+            { f: 16000, label: '16k' }
+        ],
+        eqGains: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        eqPreamp: 0,
+        eqFilters: null,
+        eqPreampNode: null,
+        eqTrayOpen: false,
+        playbackRate: 1,
+        specGain: 1.2,
 async init() {
     this.ctx = document.getElementById('vis-canvas').getContext('2d');
     this.mirror = 'https://all.api.radio-browser.info';
@@ -1207,6 +1490,8 @@ async init() {
     this.setupHotkeys();
     this.setupDrawerDismiss();
     this.setupStageControls();
+    this.buildEqUI();
+    this.restoreEqState();
     this.resize();
     window.onresize = () => this.resize();
 
@@ -1663,7 +1948,25 @@ startAnalysis() {
                         this.analyser = this.ac.createAnalyser();
                         this.analyser.fftSize = 256;
                         this.analyser.smoothingTimeConstant = 0.8;
-                        this._mes.connect(this.analyser);
+                        // Chain: mes → preamp → peaking×N → analyser → dest
+                        this.eqPreampNode = this.ac.createGain();
+                        const preDb = this.eqPreamp || 0;
+                        this.eqPreampNode.gain.value = Math.pow(10, preDb / 20);
+                        this.eqFilters = this.eqBands.map((b, i) => {
+                            const f = this.ac.createBiquadFilter();
+                            f.type = 'peaking';
+                            f.frequency.value = b.f;
+                            f.Q.value = 1.2;
+                            f.gain.value = this.eqGains[i] || 0;
+                            return f;
+                        });
+                        this._mes.connect(this.eqPreampNode);
+                        let node = this.eqPreampNode;
+                        this.eqFilters.forEach(f => {
+                            node.connect(f);
+                            node = f;
+                        });
+                        node.connect(this.analyser);
                         this.analyser.connect(this.ac.destination);
                         this.fData = new Uint8Array(this.analyser.frequencyBinCount);
                     }
@@ -1671,6 +1974,206 @@ startAnalysis() {
             } catch (err) {
                 console.warn('[erndub] startAnalysis failed', err);
             }
+        },
+
+        // ─── EQUALISER / SPECTRUM / PITCH ────────────────────────────────
+        buildEqUI() {
+            const host = document.getElementById('eq-bands');
+            if (!host) return;
+            host.innerHTML = this.eqBands.map((b, i) => {
+                const g = this.eqGains[i] || 0;
+                return `
+                <div class="eq-band">
+                    <span class="eq-band-val" id="eq-val-${i}">${g > 0 ? '+' : ''}${g}</span>
+                    <div class="eq-slider-wrap">
+                        <input type="range" class="eq-slider" id="eq-sl-${i}"
+                               min="-12" max="12" step="0.5" value="${g}"
+                               data-idx="${i}"
+                               oninput="app.setEqBand(${i}, this.value)">
+                    </div>
+                    <label>${b.label}</label>
+                </div>`;
+            }).join('');
+        },
+
+        restoreEqState() {
+            try {
+                const raw = localStorage.getItem('erndub_eq');
+                if (raw) {
+                    const arr = JSON.parse(raw);
+                    if (Array.isArray(arr) && arr.length === this.eqBands.length) {
+                        this.eqGains = arr.map(v => Math.max(-12, Math.min(12, Number(v) || 0)));
+                    }
+                }
+                const pre = parseFloat(localStorage.getItem('erndub_preamp') || '0');
+                if (Number.isFinite(pre)) this.eqPreamp = Math.max(-12, Math.min(12, pre));
+                const rate = parseFloat(localStorage.getItem('erndub_rate') || '1');
+                if (Number.isFinite(rate)) this.playbackRate = Math.max(0.5, Math.min(2, rate));
+                const sg = parseFloat(localStorage.getItem('erndub_spec_gain') || '1.2');
+                if (Number.isFinite(sg)) this.specGain = Math.max(0.4, Math.min(3, sg));
+            } catch (e) {}
+            this.buildEqUI();
+            const preSl = document.getElementById('eq-preamp');
+            const preVal = document.getElementById('eq-preamp-val');
+            if (preSl) preSl.value = String(this.eqPreamp);
+            if (preVal) preVal.textContent = (this.eqPreamp > 0 ? '+' : '') + this.eqPreamp + ' dB';
+            const pitch = document.getElementById('eq-pitch');
+            const pitchVal = document.getElementById('eq-pitch-val');
+            if (pitch) pitch.value = String(this.playbackRate);
+            if (pitchVal) pitchVal.textContent = this.playbackRate.toFixed(2) + '×';
+            const sgSl = document.getElementById('eq-spec-gain');
+            const sgVal = document.getElementById('eq-spec-gain-val');
+            if (sgSl) sgSl.value = String(this.specGain);
+            if (sgVal) sgVal.textContent = this.specGain.toFixed(1) + '×';
+            if (this.player) {
+                try { this.player.playbackRate(this.playbackRate); } catch (e) {}
+            }
+        },
+
+        persistEqState() {
+            try {
+                localStorage.setItem('erndub_eq', JSON.stringify(this.eqGains));
+                localStorage.setItem('erndub_preamp', String(this.eqPreamp));
+                localStorage.setItem('erndub_rate', String(this.playbackRate));
+                localStorage.setItem('erndub_spec_gain', String(this.specGain));
+            } catch (e) {}
+        },
+
+        setEqBand(idx, value) {
+            const g = Math.max(-12, Math.min(12, parseFloat(value) || 0));
+            this.eqGains[idx] = g;
+            if (this.eqFilters && this.eqFilters[idx]) {
+                this.eqFilters[idx].gain.setTargetAtTime(g, this.ac?.currentTime || 0, 0.03);
+            }
+            const val = document.getElementById('eq-val-' + idx);
+            if (val) val.textContent = (g > 0 ? '+' : '') + g;
+            this.persistEqState();
+        },
+
+        setPreamp(value) {
+            const g = Math.max(-12, Math.min(12, parseFloat(value) || 0));
+            this.eqPreamp = g;
+            if (this.eqPreampNode) {
+                const lin = Math.pow(10, g / 20);
+                this.eqPreampNode.gain.setTargetAtTime(lin, this.ac?.currentTime || 0, 0.03);
+            }
+            const val = document.getElementById('eq-preamp-val');
+            if (val) val.textContent = (g > 0 ? '+' : '') + g + ' dB';
+            this.persistEqState();
+        },
+
+        setSpecGain(value) {
+            this.specGain = Math.max(0.4, Math.min(3, parseFloat(value) || 1.2));
+            const el = document.getElementById('eq-spec-gain-val');
+            if (el) el.textContent = this.specGain.toFixed(1) + '×';
+            this.persistEqState();
+        },
+
+        resetEq() {
+            this.eqGains = this.eqBands.map(() => 0);
+            this.eqBands.forEach((_, i) => {
+                const sl = document.getElementById('eq-sl-' + i);
+                if (sl) sl.value = '0';
+                this.setEqBand(i, 0);
+            });
+            const preSl = document.getElementById('eq-preamp');
+            if (preSl) preSl.value = '0';
+            this.setPreamp(0);
+        },
+
+        applyEqPreset(name) {
+            // 10-band: 31 62 125 250 500 1k 2k 4k 8k 16k
+            const presets = {
+                flat:        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                bass:        [6, 5, 4, 2, 0, 0, 0, 0, 0, 0],
+                treble:      [0, 0, 0, 0, 0, 1, 3, 5, 6, 6],
+                vshape:      [5, 3, 1, -2, -3, -2, 1, 3, 5, 6],
+                vocal:       [-2, -1, 0, 2, 4, 4, 3, 1, 0, -1],
+                electronic:  [5, 4, 1, 0, -2, 0, 2, 3, 4, 5]
+            };
+            const gains = presets[name] || presets.flat;
+            gains.forEach((g, i) => {
+                const sl = document.getElementById('eq-sl-' + i);
+                if (sl) sl.value = String(g);
+                this.setEqBand(i, g);
+            });
+        },
+
+        setPlaybackRate(v) {
+            const r = Math.max(0.5, Math.min(2, parseFloat(v) || 1));
+            this.playbackRate = r;
+            if (this.player) {
+                try { this.player.playbackRate(r); } catch (e) {}
+            }
+            const el = document.getElementById('eq-pitch-val');
+            if (el) el.textContent = r.toFixed(2) + '×';
+            const sl = document.getElementById('eq-pitch');
+            if (sl && Math.abs(parseFloat(sl.value) - r) > 0.001) sl.value = String(r);
+            this.persistEqState();
+        },
+
+        resetPitch() {
+            this.setPlaybackRate(1);
+        },
+
+        toggleEqTray(force) {
+            const tray = document.getElementById('eq-tray');
+            const btn = document.getElementById('eq-toggle-btn');
+            if (!tray) return;
+            const open = force === undefined ? !this.eqTrayOpen : !!force;
+            this.eqTrayOpen = open;
+            tray.classList.toggle('open', open);
+            tray.setAttribute('aria-hidden', open ? 'false' : 'true');
+            if (btn) btn.classList.toggle('active', open);
+            if (open) {
+                try { this.startAnalysis(); } catch (e) {}
+                this._resizeEqSpectrum();
+            }
+        },
+
+        _resizeEqSpectrum() {
+            const c = document.getElementById('eq-spectrum');
+            if (!c) return;
+            const wrap = c.parentElement;
+            const w = Math.max(120, wrap?.clientWidth || 248);
+            const h = Math.max(40, wrap?.clientHeight || 56);
+            if (c.width !== w) c.width = w;
+            if (c.height !== h) c.height = h;
+        },
+
+        drawEqSpectrum() {
+            if (!this.eqTrayOpen) return;
+            const c = document.getElementById('eq-spectrum');
+            if (!c) return;
+            const ctx = c.getContext('2d');
+            if (!ctx) return;
+            const w = c.width, h = c.height;
+            const root = getComputedStyle(document.documentElement);
+            const accent = (root.getPropertyValue('--skin-accent').trim() || '#bb8844');
+            const bg = (root.getPropertyValue('--crt-bg').trim() || '#0a0a0a');
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, w, h);
+            if (!this.fData || !this.fData.length) return;
+            const n = this.fData.length;
+            const barW = Math.max(1, w / n);
+            const gain = this.specGain || 1.2;
+            for (let i = 0; i < n; i++) {
+                const v = Math.min(1, (this.fData[i] / 255) * gain);
+                const bh = v * (h - 2);
+                const x = i * barW;
+                ctx.fillStyle = accent;
+                ctx.globalAlpha = 0.35 + v * 0.65;
+                ctx.fillRect(x, h - bh, Math.max(1, barW - 0.5), bh);
+            }
+            ctx.globalAlpha = 1;
+            // baseline
+            ctx.strokeStyle = accent;
+            ctx.globalAlpha = 0.25;
+            ctx.beginPath();
+            ctx.moveTo(0, h - 0.5);
+            ctx.lineTo(w, h - 0.5);
+            ctx.stroke();
+            ctx.globalAlpha = 1;
         },
 
         handleSearch(event) { if (event.key === 'Enter') this.fetchStations(event.target.value, true); },
@@ -1799,6 +2302,7 @@ startAnalysis() {
             }
             this.ensureCrossOrigin();
             this.player.src({ src, type: s.fileType || 'audio/mpeg' });
+            try { this.player.playbackRate(this.playbackRate || 1); } catch (e) {}
             document.getElementById('t-sig').innerText = s.name.toUpperCase();
             if (auto) {
                 this.player.play().then(() => {
@@ -1810,6 +2314,7 @@ startAnalysis() {
                     } catch (e) {}
                     this.ensureCrossOrigin();
                     this.startAnalysis();
+                    try { this.player.playbackRate(this.playbackRate || 1); } catch (e) {}
                     this.player.one('playing', () => { this.ensureCrossOrigin(); this.startAnalysis(); });
                 }).catch((err) => console.warn('[erndub] play failed', err));
             } else {
@@ -3053,6 +3558,9 @@ startAnalysis() {
         } else {
             this.fData.fill(0);
         }
+
+        // Mini spectrum in left EQ tray
+        try { this.drawEqSpectrum(); } catch (e) {}
 
         const cssRoot = getComputedStyle(document.documentElement);
         const crtBg = cssRoot.getPropertyValue('--crt-bg').trim() || '#0a0a0a';
