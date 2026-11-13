@@ -26,6 +26,15 @@ window.GAMES = [
     controls: '← → move · ↑/X rotate · ↓ soft · Space hard drop · Start pause'
   },
   {
+    id: 'mario-gb',
+    title: 'SUPER MARIO LAND (GB STYLE)',
+    genre: 'PLATFORM',
+    type: 'html',
+    inline: true,
+    description: 'Side-scroller homage — 3 stages, stomps, coins.',
+    controls: '← → run · Z/Space/↑ jump · Start pause'
+  },
+  {
     id: 'demo-breakout',
     title: 'BREAKOUT',
     genre: 'ARCADE',
@@ -51,6 +60,65 @@ window.GAMES = [
     inline: true,
     description: 'Falling-sand reactor. Wind field, heat, cloners, mites, fungus bombs, rockets, thermite, void, plasma.',
     controls: 'LMB paint · RMB erase · MMB sample · Wheel brush · Q/E material · 1-0 hotkeys · C clear · P pause · G gravity · D demo · F fireworks'
+  },
+
+
+  // —— External polished HTML5 (direct embeds that allow framing) ——
+  // Prefer html-classic.itch.zone — itch.io game pages block iframes (CSP frame-ancestors).
+  {
+    id: 'ext-last-lap',
+    title: 'LAST LAP — ONE CHANCE',
+    genre: 'DRIVING',
+    type: 'iframe',
+    src: 'https://html-classic.itch.zone/html/16802824/index.html',
+    description: 'One race against the machine. Full win/lose ending.',
+    controls: 'W/↑ accel · A/D steer · R restart · gamepad'
+  },
+  {
+    id: 'ext-breakout-neon',
+    title: 'BREAKOUT NEON',
+    genre: 'ARCADE',
+    type: 'iframe',
+    src: 'https://html-classic.itch.zone/html/351913/BreakoutNeon/index.html',
+    description: 'Polished brick-breaker with skills, levels, energy system.',
+    controls: 'Mouse / paddle · Q W E R skills'
+  },
+  {
+    id: 'ext-gotet',
+    title: 'GOTET',
+    genre: 'PUZZLE',
+    type: 'iframe',
+    src: 'https://html-classic.itch.zone/html/7383874/index.html',
+    description: 'Tetris-evolved tile match with spells, goals, progression.',
+    controls: 'See in-game help'
+  },
+  // itch.io pages cannot be framed — launched via in-player "Open" panel
+  {
+    id: 'ext-just-drive',
+    title: 'JUST DRIVE!',
+    genre: 'DRIVING',
+    type: 'itch',
+    src: 'https://spaceshark123.itch.io/just-drive',
+    description: 'Staged drive & shoot · clear targets · speedrun timer. Opens on itch (iframe blocked by host).',
+    controls: '← → steer · Space shoot · R restart'
+  },
+  {
+    id: 'ext-ultra-drive',
+    title: 'ULTRA | DRIVE',
+    genre: 'SHMUP',
+    type: 'itch',
+    src: 'https://bennyc4.itch.io/ultra-drive',
+    description: '5-stage 16-bit shmup + boss. Opens on itch (iframe blocked by host).',
+    controls: 'Move · fire · gamepad'
+  },
+  {
+    id: 'ext-turbowave',
+    title: 'TURBOWAVE',
+    genre: 'DRIVING',
+    type: 'itch',
+    src: 'https://drleria.itch.io/turbowave',
+    description: 'Synthwave highway racer · nitro · missions · garage. Opens on itch (iframe blocked by host).',
+    controls: '← → lane · Space nitro'
   },
 
   // —— Emulation (EmulatorJS) ——
@@ -1774,6 +1842,543 @@ window.InlineGames.sandpit = function (canvas, api) {
     }
   };
 };
+
+
+
+// ---------- HIGHWAY RUSH (endless driving) ----------
+window.InlineGames['highway-rush'] = function (canvas, api) {
+  const ctx = canvas.getContext('2d');
+  const W = 320, H = 400;
+  canvas.width = W; canvas.height = H;
+  let raf = 0, last = 0, paused = false, over = false, score = 0, speed = 4;
+  let x = W / 2, vx = 0;
+  const cars = [], gates = [];
+  function spawnCar() {
+    cars.push({ x: 50 + Math.random() * (W - 100), y: -40 - Math.random() * 120, w: 28, h: 44, s: speed * (0.5 + Math.random() * 0.5) });
+  }
+  function spawnGate() {
+    gates.push({ x: 40 + Math.random() * (W - 80), y: -20, r: 18 });
+  }
+  for (let i = 0; i < 5; i++) { spawnCar(); cars[i].y = -i * 90; }
+  function tick(now) {
+    if (!api.running()) return;
+    raf = requestAnimationFrame(tick);
+    const dt = Math.min(40, now - last) / 16.6; last = now;
+    const keys = api.keys || {};
+    if (keys.Enter && !tick._p) { paused = !paused; tick._p = true; }
+    if (!keys.Enter) tick._p = false;
+    if (paused || over) { draw(); return; }
+    if (keys.ArrowLeft) vx -= 0.6 * dt;
+    if (keys.ArrowRight) vx += 0.6 * dt;
+    const boost = keys.ArrowUp || keys.z || keys.Z || keys[' '];
+    vx *= 0.9;
+    x = Math.max(30, Math.min(W - 30, x + vx * dt * 4));
+    speed += 0.002 * dt;
+    const road = speed * (boost ? 1.6 : 1) * dt;
+    score += road * 0.5;
+    for (const c of cars) {
+      c.y += (c.s + (boost ? 2 : 0)) * dt;
+      if (c.y > H + 50) { c.y = -60 - Math.random() * 100; c.x = 50 + Math.random() * (W - 100); c.s = speed * (0.5 + Math.random() * 0.5); }
+      if (Math.abs(c.x - x) < 22 && Math.abs(c.y - (H - 60)) < 30) over = true;
+    }
+    for (const g of gates) {
+      g.y += road * 3;
+      if (g.y > H + 20) { g.y = -30; g.x = 40 + Math.random() * (W - 80); }
+      if (Math.hypot(g.x - x, g.y - (H - 60)) < 24) { score += 50; g.y = -40; g.x = 40 + Math.random() * (W - 80); }
+    }
+    if (gates.length < 3 && Math.random() < 0.02) spawnGate();
+    if (cars.length < 6 + (score / 500 | 0) && Math.random() < 0.03) spawnCar();
+    draw();
+  }
+  function draw() {
+    // night road
+    ctx.fillStyle = '#0a0a18';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#111';
+    ctx.fillRect(40, 0, W - 80, H);
+    ctx.strokeStyle = 'rgba(255,255,100,0.35)';
+    ctx.setLineDash([16, 18]);
+    ctx.beginPath(); ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, H); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#f84';
+    for (const g of gates) {
+      ctx.beginPath(); ctx.arc(g.x, g.y, g.r, 0, Math.PI * 2); ctx.fill();
+    }
+    for (const c of cars) {
+      ctx.fillStyle = '#c44';
+      ctx.fillRect(c.x - c.w / 2, c.y - c.h / 2, c.w, c.h);
+      ctx.fillStyle = '#6cf';
+      ctx.fillRect(c.x - c.w / 2 + 4, c.y - c.h / 2 + 4, c.w - 8, 10);
+    }
+    // player
+    ctx.fillStyle = '#6f6';
+    ctx.fillRect(x - 14, H - 80, 28, 44);
+    ctx.fillStyle = '#cff';
+    ctx.fillRect(x - 10, H - 74, 20, 12);
+    ctx.fillStyle = '#9af';
+    ctx.font = '12px monospace';
+    ctx.fillText('SCORE ' + (score | 0) + (paused ? '  PAUSE' : '') + (over ? '  CRASH — Start' : ''), 8, 16);
+  }
+  last = performance.now();
+  raf = requestAnimationFrame(tick);
+  return { stop() { if (raf) cancelAnimationFrame(raf); } };
+};
+
+// ---------- CIRCUIT DRIFT (top-down racer) ----------
+window.InlineGames['circuit-drift'] = function (canvas, api) {
+  const ctx = canvas.getContext('2d');
+  const W = 360, H = 360;
+  canvas.width = W; canvas.height = H;
+  let raf = 0, last = 0, paused = false;
+  let x = W * 0.5, y = H * 0.75, a = -Math.PI / 2, v = 0, lap = 0, best = 0, t0 = performance.now(), ck = 0;
+  // simple oval checkpoints
+  const cps = [0.25, 0.5, 0.75, 1.0];
+  function tick(now) {
+    if (!api.running()) return;
+    raf = requestAnimationFrame(tick);
+    const dt = Math.min(40, now - last) / 16.6; last = now;
+    const keys = api.keys || {};
+    if (keys.Enter && !tick._p) { paused = !paused; tick._p = true; }
+    if (!keys.Enter) tick._p = false;
+    if (paused) { draw(now); return; }
+    if (keys.ArrowLeft) a -= 0.07 * dt * (0.6 + Math.min(1, Math.abs(v) / 4));
+    if (keys.ArrowRight) a += 0.07 * dt * (0.6 + Math.min(1, Math.abs(v) / 4));
+    if (keys.ArrowUp) v += 0.12 * dt;
+    if (keys.ArrowDown) v -= 0.15 * dt;
+    v *= 0.98;
+    v = Math.max(-2, Math.min(5.5, v));
+    x += Math.cos(a) * v * dt * 2.2;
+    y += Math.sin(a) * v * dt * 2.2;
+    // soft track bounds (ellipse)
+    const cx = W / 2, cy = H / 2, rx = W * 0.38, ry = H * 0.32;
+    const nx = (x - cx) / rx, ny = (y - cy) / ry;
+    const d = nx * nx + ny * ny;
+    if (d > 1.05 || d < 0.35) { v *= 0.5; }
+    x = Math.max(20, Math.min(W - 20, x));
+    y = Math.max(20, Math.min(H - 20, y));
+    // checkpoints along angle
+    let ang = Math.atan2(y - cy, x - cx);
+    if (ang < 0) ang += Math.PI * 2;
+    const prog = ang / (Math.PI * 2);
+    if (ck < cps.length && prog > cps[ck] && prog < cps[ck] + 0.15) ck++;
+    if (ck >= cps.length && prog < 0.1) {
+      lap++;
+      const lt = (now - t0) / 1000;
+      if (!best || lt < best) best = lt;
+      t0 = now; ck = 0;
+    }
+    draw(now);
+  }
+  function draw(now) {
+    ctx.fillStyle = '#0d1a10';
+    ctx.fillRect(0, 0, W, H);
+    const cx = W / 2, cy = H / 2;
+    ctx.strokeStyle = '#2a4';
+    ctx.lineWidth = 48;
+    ctx.beginPath(); ctx.ellipse(cx, cy, W * 0.38, H * 0.32, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([10, 12]);
+    ctx.beginPath(); ctx.ellipse(cx, cy, W * 0.38, H * 0.32, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.save();
+    ctx.translate(x, y); ctx.rotate(a);
+    ctx.fillStyle = '#f84';
+    ctx.fillRect(-10, -6, 20, 12);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(6, -3, 6, 6);
+    ctx.restore();
+    ctx.fillStyle = '#9f8';
+    ctx.font = '12px monospace';
+    const t = ((now - t0) / 1000).toFixed(1);
+    ctx.fillText('LAP ' + lap + '  T ' + t + 's  BEST ' + (best ? best.toFixed(1) + 's' : '--') + (paused ? '  PAUSE' : ''), 8, 16);
+  }
+  last = performance.now();
+  raf = requestAnimationFrame(tick);
+  return { stop() { if (raf) cancelAnimationFrame(raf); } };
+};
+
+// ---------- VECTOR BLASTER (vertical shmup) ----------
+window.InlineGames['vector-blaster'] = function (canvas, api) {
+  const ctx = canvas.getContext('2d');
+  const W = 320, H = 400;
+  canvas.width = W; canvas.height = H;
+  let raf = 0, last = 0, paused = false, over = false, score = 0, wave = 1;
+  let px = W / 2, py = H - 40;
+  const shots = [], foes = [], power = [];
+  let cool = 0, lives = 3;
+  function spawnWave() {
+    const n = 4 + wave * 2;
+    for (let i = 0; i < n; i++) {
+      foes.push({ x: 30 + (i % 8) * 36, y: 30 + ((i / 8) | 0) * 28, hp: 1 + (wave / 3 | 0), t: Math.random() * 10, kind: wave % 3 });
+    }
+  }
+  spawnWave();
+  function tick(now) {
+    if (!api.running()) return;
+    raf = requestAnimationFrame(tick);
+    const dt = Math.min(40, now - last) / 16.6; last = now;
+    const keys = api.keys || {};
+    if (keys.Enter && !tick._p) { paused = !paused; tick._p = true; }
+    if (!keys.Enter) tick._p = false;
+    if (paused || over) { draw(); return; }
+    if (keys.ArrowLeft) px -= 4 * dt;
+    if (keys.ArrowRight) px += 4 * dt;
+    if (keys.ArrowUp) py -= 3 * dt;
+    if (keys.ArrowDown) py += 3 * dt;
+    px = Math.max(12, Math.min(W - 12, px));
+    py = Math.max(20, Math.min(H - 20, py));
+    cool -= dt;
+    if ((keys.z || keys.Z || keys[' ']) && cool <= 0) {
+      shots.push({ x: px, y: py - 10, vy: -8 });
+      cool = 5;
+    }
+    for (const s of shots) s.y += s.vy * dt;
+    for (let i = shots.length - 1; i >= 0; i--) if (shots[i].y < -10) shots.splice(i, 1);
+    for (const f of foes) {
+      f.t += dt * 0.05;
+      f.x += Math.sin(f.t * 3 + f.y) * 0.8 * dt;
+      f.y += (0.4 + wave * 0.05) * dt;
+      if (f.y > H + 20) { f.y = -20; f.x = 20 + Math.random() * (W - 40); }
+      if (Math.hypot(f.x - px, f.y - py) < 16) { lives--; f.y = -40; if (lives <= 0) over = true; }
+    }
+    for (let i = foes.length - 1; i >= 0; i--) {
+      const f = foes[i];
+      for (let j = shots.length - 1; j >= 0; j--) {
+        if (Math.hypot(f.x - shots[j].x, f.y - shots[j].y) < 14) {
+          f.hp--; shots.splice(j, 1);
+          if (f.hp <= 0) { score += 10 * wave; foes.splice(i, 1); if (Math.random() < 0.1) power.push({ x: f.x, y: f.y }); }
+          break;
+        }
+      }
+    }
+    for (let i = power.length - 1; i >= 0; i--) {
+      power[i].y += 1.5 * dt;
+      if (Math.hypot(power[i].x - px, power[i].y - py) < 16) { score += 25; cool = -10; power.splice(i, 1); }
+      else if (power[i].y > H) power.splice(i, 1);
+    }
+    if (!foes.length) { wave++; spawnWave(); }
+    draw();
+  }
+  function draw() {
+    ctx.fillStyle = '#050510';
+    ctx.fillRect(0, 0, W, H);
+    for (let i = 0; i < 40; i++) {
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.fillRect((i * 47 + score) % W, (i * 31) % H, 1, 1);
+    }
+    ctx.fillStyle = '#6cf';
+    for (const s of shots) { ctx.fillRect(s.x - 1, s.y, 3, 10); }
+    for (const f of foes) {
+      ctx.fillStyle = f.kind === 0 ? '#f46' : f.kind === 1 ? '#fa4' : '#c6f';
+      ctx.fillRect(f.x - 10, f.y - 8, 20, 16);
+    }
+    ctx.fillStyle = '#ff4';
+    for (const p of power) { ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI * 2); ctx.fill(); }
+    ctx.fillStyle = '#8f8';
+    ctx.beginPath();
+    ctx.moveTo(px, py - 12); ctx.lineTo(px - 12, py + 10); ctx.lineTo(px + 12, py + 10);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#9af';
+    ctx.font = '12px monospace';
+    ctx.fillText('SCORE ' + score + '  WAVE ' + wave + '  LIVES ' + lives + (paused ? '  PAUSE' : '') + (over ? '  OVER' : ''), 8, 16);
+  }
+  last = performance.now();
+  raf = requestAnimationFrame(tick);
+  return { stop() { if (raf) cancelAnimationFrame(raf); } };
+};
+
+// ---------- ASTEROID FIELD ----------
+window.InlineGames['asteroid-field'] = function (canvas, api) {
+  const ctx = canvas.getContext('2d');
+  const W = 360, H = 360;
+  canvas.width = W; canvas.height = H;
+  let raf = 0, last = 0, paused = false, over = false, score = 0, lives = 3;
+  let x = W / 2, y = H / 2, a = 0, vx = 0, vy = 0, cool = 0;
+  const rocks = [], shots = [];
+  function addRock(X, Y, R) {
+    const n = 6 + (Math.random() * 4 | 0);
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+      const ang = (i / n) * Math.PI * 2;
+      pts.push([(0.65 + Math.random() * 0.4) * Math.cos(ang), (0.65 + Math.random() * 0.4) * Math.sin(ang)]);
+    }
+    rocks.push({ x: X, y: Y, r: R, vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2, pts });
+  }
+  for (let i = 0; i < 5; i++) addRock(Math.random() * W, Math.random() * H, 28 + Math.random() * 16);
+  function tick(now) {
+    if (!api.running()) return;
+    raf = requestAnimationFrame(tick);
+    const dt = Math.min(40, now - last) / 16.6; last = now;
+    const keys = api.keys || {};
+    if (keys.Enter && !tick._p) { paused = !paused; tick._p = true; }
+    if (!keys.Enter) tick._p = false;
+    if (paused || over) { draw(); return; }
+    if (keys.ArrowLeft) a -= 0.08 * dt;
+    if (keys.ArrowRight) a += 0.08 * dt;
+    if (keys.ArrowUp) { vx += Math.cos(a) * 0.15 * dt; vy += Math.sin(a) * 0.15 * dt; }
+    vx *= 0.99; vy *= 0.99;
+    x = (x + vx * dt * 2 + W) % W;
+    y = (y + vy * dt * 2 + H) % H;
+    cool -= dt;
+    if ((keys.z || keys.Z || keys[' ']) && cool <= 0) {
+      shots.push({ x, y, vx: Math.cos(a) * 6, vy: Math.sin(a) * 6, life: 50 });
+      cool = 6;
+    }
+    for (const s of shots) { s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt; }
+    for (let i = shots.length - 1; i >= 0; i--) if (shots[i].life <= 0) shots.splice(i, 1);
+    for (const r of rocks) {
+      r.x = (r.x + r.vx * dt + W) % W;
+      r.y = (r.y + r.vy * dt + H) % H;
+      if (Math.hypot(r.x - x, r.y - y) < r.r * 0.7) {
+        lives--; x = W / 2; y = H / 2; vx = vy = 0;
+        if (lives <= 0) over = true;
+      }
+    }
+    for (let i = rocks.length - 1; i >= 0; i--) {
+      const r = rocks[i];
+      for (let j = shots.length - 1; j >= 0; j--) {
+        if (Math.hypot(r.x - shots[j].x, r.y - shots[j].y) < r.r) {
+          shots.splice(j, 1); score += (40 - r.r) | 0;
+          rocks.splice(i, 1);
+          if (r.r > 16) {
+            addRock(r.x, r.y, r.r * 0.55);
+            addRock(r.x, r.y, r.r * 0.55);
+          }
+          break;
+        }
+      }
+    }
+    if (!rocks.length) for (let i = 0; i < 5 + score / 200; i++) addRock(Math.random() * W, Math.random() * H, 24 + Math.random() * 18);
+    draw();
+  }
+  function draw() {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = '#9cf';
+    ctx.lineWidth = 1.5;
+    for (const r of rocks) {
+      ctx.beginPath();
+      r.pts.forEach((p, i) => {
+        const px = r.x + p[0] * r.r, py = r.y + p[1] * r.r;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      });
+      ctx.closePath(); ctx.stroke();
+    }
+    ctx.strokeStyle = '#fff';
+    for (const s of shots) { ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s.x - s.vx, s.y - s.vy); ctx.stroke(); }
+    ctx.save();
+    ctx.translate(x, y); ctx.rotate(a);
+    ctx.beginPath();
+    ctx.moveTo(10, 0); ctx.lineTo(-8, -7); ctx.lineTo(-4, 0); ctx.lineTo(-8, 7);
+    ctx.closePath(); ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = '#9cf';
+    ctx.font = '12px monospace';
+    ctx.fillText('SCORE ' + score + '  LIVES ' + lives + (paused ? '  PAUSE' : '') + (over ? '  OVER' : ''), 8, 16);
+  }
+  last = performance.now();
+  raf = requestAnimationFrame(tick);
+  return { stop() { if (raf) cancelAnimationFrame(raf); } };
+};
+
+// ---------- PIXEL INVADERS ----------
+window.InlineGames['pixel-invaders'] = function (canvas, api) {
+  const ctx = canvas.getContext('2d');
+  const W = 320, H = 380;
+  canvas.width = W; canvas.height = H;
+  let raf = 0, last = 0, paused = false, over = false, win = false, score = 0;
+  let px = W / 2, cool = 0, dir = 1, stepY = 0;
+  const shots = [], eshots = [];
+  let aliens = [];
+  function resetAliens() {
+    aliens = [];
+    for (let r = 0; r < 5; r++)
+      for (let c = 0; c < 8; c++)
+        aliens.push({ x: 40 + c * 30, y: 40 + r * 24, alive: true, row: r });
+  }
+  resetAliens();
+  const bunkers = [70, 130, 190, 250].map(x => ({ x, y: H - 90, hp: 6 }));
+  function tick(now) {
+    if (!api.running()) return;
+    raf = requestAnimationFrame(tick);
+    const dt = Math.min(40, now - last) / 16.6; last = now;
+    const keys = api.keys || {};
+    if (keys.Enter && !tick._p) { paused = !paused; tick._p = true; }
+    if (!keys.Enter) tick._p = false;
+    if (paused || over || win) { draw(); return; }
+    if (keys.ArrowLeft) px -= 3.5 * dt;
+    if (keys.ArrowRight) px += 3.5 * dt;
+    px = Math.max(16, Math.min(W - 16, px));
+    cool -= dt;
+    if ((keys.z || keys.Z || keys[' ']) && cool <= 0) { shots.push({ x: px, y: H - 40 }); cool = 12; }
+    for (const s of shots) s.y -= 6 * dt;
+    for (let i = shots.length - 1; i >= 0; i--) if (shots[i].y < 0) shots.splice(i, 1);
+    // alien block motion
+    let minX = 999, maxX = -999, alive = 0;
+    for (const a of aliens) if (a.alive) { alive++; minX = Math.min(minX, a.x); maxX = Math.max(maxX, a.x); }
+    if (!alive) { win = true; draw(); return; }
+    const spd = 0.6 + (40 - alive) * 0.04;
+    let bounce = false;
+    if (dir > 0 && maxX > W - 20) bounce = true;
+    if (dir < 0 && minX < 20) bounce = true;
+    if (bounce) { dir *= -1; stepY = 12; }
+    for (const a of aliens) {
+      if (!a.alive) continue;
+      a.x += dir * spd * dt;
+      if (stepY) a.y += stepY * 0.15 * dt;
+      if (a.y > H - 100) over = true;
+      if (Math.random() < 0.002 * dt) eshots.push({ x: a.x, y: a.y });
+    }
+    stepY *= 0.9;
+    for (const e of eshots) e.y += 3 * dt;
+    for (let i = eshots.length - 1; i >= 0; i--) {
+      if (eshots[i].y > H) eshots.splice(i, 1);
+      else if (Math.abs(eshots[i].x - px) < 12 && Math.abs(eshots[i].y - (H - 30)) < 12) { over = true; }
+    }
+    for (let i = aliens.length - 1; i >= 0; i--) {
+      const a = aliens[i];
+      if (!a.alive) continue;
+      for (let j = shots.length - 1; j >= 0; j--) {
+        if (Math.abs(a.x - shots[j].x) < 12 && Math.abs(a.y - shots[j].y) < 10) {
+          a.alive = false; shots.splice(j, 1); score += 10 * (5 - a.row); break;
+        }
+      }
+    }
+    for (const b of bunkers) {
+      for (let j = shots.length - 1; j >= 0; j--) {
+        if (b.hp > 0 && Math.abs(b.x - shots[j].x) < 18 && Math.abs(b.y - shots[j].y) < 10) {
+          b.hp--; shots.splice(j, 1);
+        }
+      }
+      for (let j = eshots.length - 1; j >= 0; j--) {
+        if (b.hp > 0 && Math.abs(b.x - eshots[j].x) < 18 && Math.abs(b.y - eshots[j].y) < 10) {
+          b.hp--; eshots.splice(j, 1);
+        }
+      }
+    }
+    draw();
+  }
+  function draw() {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#8f8';
+    for (const a of aliens) if (a.alive) ctx.fillRect(a.x - 10, a.y - 6, 20, 12);
+    ctx.fillStyle = '#4f4';
+    for (const b of bunkers) if (b.hp > 0) ctx.fillRect(b.x - 18, b.y - 6, 36, 12 * (b.hp / 6));
+    ctx.fillStyle = '#fff';
+    for (const s of shots) ctx.fillRect(s.x - 1, s.y, 2, 8);
+    ctx.fillStyle = '#f66';
+    for (const e of eshots) ctx.fillRect(e.x - 1, e.y, 2, 8);
+    ctx.fillStyle = '#6cf';
+    ctx.fillRect(px - 14, H - 36, 28, 12);
+    ctx.fillStyle = '#9af';
+    ctx.font = '12px monospace';
+    ctx.fillText('SCORE ' + score + (paused ? '  PAUSE' : '') + (over ? '  OVER' : '') + (win ? '  CLEAR' : ''), 8, 16);
+  }
+  last = performance.now();
+  raf = requestAnimationFrame(tick);
+  return { stop() { if (raf) cancelAnimationFrame(raf); } };
+};
+
+// ---------- 2048 BLOCKS ----------
+window.InlineGames['block-2048'] = function (canvas, api) {
+  const ctx = canvas.getContext('2d');
+  const N = 4, SIZE = 80, PAD = 8;
+  const W = N * SIZE + PAD * (N + 1);
+  canvas.width = W; canvas.height = W + 28;
+  let grid = Array.from({ length: N }, () => Array(N).fill(0));
+  let score = 0, over = false, paused = false, raf = 0;
+  const colors = {
+    0: '#111', 2: '#eee4da', 4: '#ede0c8', 8: '#f2b179', 16: '#f59563',
+    32: '#f67c5f', 64: '#f65e3b', 128: '#edcf72', 256: '#edcc61',
+    512: '#edc850', 1024: '#edc53f', 2048: '#edc22e'
+  };
+  function empty() {
+    const e = [];
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (!grid[r][c]) e.push([r, c]);
+    return e;
+  }
+  function spawn() {
+    const e = empty();
+    if (!e.length) return;
+    const [r, c] = e[(Math.random() * e.length) | 0];
+    grid[r][c] = Math.random() < 0.9 ? 2 : 4;
+  }
+  function slide(line) {
+    const arr = line.filter(Boolean);
+    for (let i = 0; i < arr.length - 1; i++) {
+      if (arr[i] === arr[i + 1]) { arr[i] *= 2; score += arr[i]; arr.splice(i + 1, 1); }
+    }
+    while (arr.length < N) arr.push(0);
+    return arr;
+  }
+  function move(dir) {
+    const prev = JSON.stringify(grid);
+    if (dir === 'left') grid = grid.map(row => slide(row));
+    if (dir === 'right') grid = grid.map(row => slide(row.slice().reverse()).reverse());
+    if (dir === 'up') {
+      for (let c = 0; c < N; c++) {
+        const col = slide(grid.map(r => r[c]));
+        for (let r = 0; r < N; r++) grid[r][c] = col[r];
+      }
+    }
+    if (dir === 'down') {
+      for (let c = 0; c < N; c++) {
+        const col = slide(grid.map(r => r[c]).reverse()).reverse();
+        for (let r = 0; r < N; r++) grid[r][c] = col[r];
+      }
+    }
+    if (JSON.stringify(grid) !== prev) spawn();
+    if (!empty().length) {
+      let moves = false;
+      for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+        const v = grid[r][c];
+        if ((c + 1 < N && grid[r][c + 1] === v) || (r + 1 < N && grid[r + 1][c] === v)) moves = true;
+      }
+      if (!moves) over = true;
+    }
+  }
+  spawn(); spawn();
+  let prevKeys = {};
+  function tick() {
+    if (!api.running()) return;
+    raf = requestAnimationFrame(tick);
+    const keys = api.keys || {};
+    if (keys.Enter && !prevKeys.Enter) paused = !paused;
+    if (!paused && !over) {
+      if (keys.ArrowLeft && !prevKeys.ArrowLeft) move('left');
+      if (keys.ArrowRight && !prevKeys.ArrowRight) move('right');
+      if (keys.ArrowUp && !prevKeys.ArrowUp) move('up');
+      if (keys.ArrowDown && !prevKeys.ArrowDown) move('down');
+    }
+    prevKeys = { ...keys };
+    // draw
+    ctx.fillStyle = '#0b0b12';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#9af';
+    ctx.font = '14px monospace';
+    ctx.fillText('SCORE ' + score + (paused ? '  PAUSE' : '') + (over ? '  OVER' : ''), 8, 18);
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+      const v = grid[r][c];
+      const x = PAD + c * (SIZE + PAD);
+      const y = 28 + PAD + r * (SIZE + PAD);
+      ctx.fillStyle = colors[v] || '#3c3a32';
+      ctx.fillRect(x, y, SIZE, SIZE);
+      if (v) {
+        ctx.fillStyle = v < 8 ? '#776e65' : '#f9f6f2';
+        ctx.font = (v < 1000 ? 28 : 22) + 'px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(v), x + SIZE / 2, y + SIZE / 2);
+      }
+    }
+    ctx.textAlign = 'left';
+  }
+  raf = requestAnimationFrame(tick);
+  return { stop() { if (raf) cancelAnimationFrame(raf); } };
+};
+
 
 // Keep legacy demo engines available for HTML fallback if needed
 window.InlineGames['demo-breakout'] = window.InlineGames['demo-breakout'] || null;
